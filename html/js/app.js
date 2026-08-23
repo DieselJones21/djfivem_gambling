@@ -52,7 +52,12 @@ function setBet(value) {
     const min = state.config.bets.min;
     const max = state.config.bets.max;
     state.bet = Math.max(min, Math.min(max, Math.floor(value)));
-    renderView();
+    document.querySelectorAll('.bet-box strong').forEach((node) => {
+        node.textContent = money(state.bet);
+    });
+    document.querySelectorAll('[data-preset]').forEach((button) => {
+        button.classList.toggle('on', Number(button.dataset.preset) === state.bet);
+    });
 }
 
 function syncChrome() {

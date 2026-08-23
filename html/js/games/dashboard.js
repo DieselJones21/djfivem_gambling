@@ -1,8 +1,15 @@
 import { head } from './ui.js';
 
+let mode = 'money';
+
 export function render(root, ctx) {
     const history = ctx.state.stats.history || [];
-    const series = history.length ? history.slice(0, 8).reverse().map((item) => item.profit) : [0, 0, 0];
+    const pick = {
+        money: (item) => item.profit,
+        games: (item) => item.bet,
+        wins: (item) => item.payout
+    }[mode];
+    const series = history.length ? history.slice(0, 8).reverse().map(pick) : [0, 0, 0];
     const max = Math.max(1, ...series.map((value) => Math.abs(value)));
     const width = 640;
     const height = 200;
@@ -22,9 +29,9 @@ export function render(root, ctx) {
     root.innerHTML = `
         ${head('Statistics overview', 'Live session tape across every table on this tablet.', `
             <div class="toggles">
-                <button class="toggle on" type="button">Money</button>
-                <button class="toggle" type="button">Games</button>
-                <button class="toggle" type="button">Wins</button>
+                <button class="toggle ${mode === 'money' ? 'on' : ''}" data-mode="money" type="button">Money</button>
+                <button class="toggle ${mode === 'games' ? 'on' : ''}" data-mode="games" type="button">Games</button>
+                <button class="toggle ${mode === 'wins' ? 'on' : ''}" data-mode="wins" type="button">Wins</button>
             </div>
         `)}
         <div class="panel">
@@ -50,9 +57,10 @@ export function render(root, ctx) {
         <ul class="history">${rows}</ul>
     `;
 
-    root.querySelectorAll('.toggle').forEach((button) => {
+    root.querySelectorAll('[data-mode]').forEach((button) => {
         button.addEventListener('click', () => {
-            root.querySelectorAll('.toggle').forEach((item) => item.classList.toggle('on', item === button));
+            mode = button.dataset.mode;
+            render(root, ctx);
         });
     });
 }

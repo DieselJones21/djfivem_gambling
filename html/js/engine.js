@@ -24,7 +24,7 @@ function take(state, amount) {
 function history(state, game, bet, payout) {
     state.stats.wagered += bet;
     state.stats.won += payout;
-    if (payout > bet) state.stats.lastWin = payout - bet;
+    state.stats.lastWin = payout > bet ? payout - bet : 0;
     if (payout === 0) state.stats.lost += bet;
     state.stats.history.unshift({ game, bet, payout, profit: payout - bet, at: Date.now() / 1000 });
     state.stats.history = state.stats.history.slice(0, 14);

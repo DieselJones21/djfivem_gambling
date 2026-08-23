@@ -75,4 +75,16 @@ assert(['player', 'banker', 'tie'].includes(baccarat.result.winner), 'baccarat w
 const tooSmall = play('slots', { bet: 1 }, state());
 assert(!tooSmall.ok, 'rejects bets under the table minimum');
 
+app = state();
+let sawLoss = false;
+for (let i = 0; i < 40; i += 1) {
+    const flip = play('coinflip', { bet: 10, side: 'heads' }, app);
+    if (!flip.result.won) {
+        assert(app.stats.lastWin === 0, 'a losing hand clears recent win');
+        sawLoss = true;
+        break;
+    }
+}
+assert(sawLoss, 'expected a losing flip while checking recent-win reset');
+
 console.log('odds and engine checks passed');

@@ -28,9 +28,8 @@ local function pushHistory(source, game, bet, payout)
     local data = playerStats(source)
     data.wagered = data.wagered + bet
     data.won = data.won + payout
-    if payout > bet then
-        data.lastWin = payout - bet
-    elseif payout == 0 then
+    data.lastWin = payout > bet and (payout - bet) or 0
+    if payout == 0 then
         data.lost = data.lost + bet
     end
 
