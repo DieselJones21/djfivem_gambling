@@ -7,9 +7,9 @@ export function cardNode(card) {
     return `<div class="playing-card ${red ? 'red' : ''}"><div><small>${card.rank}</small><em>${suit}</em></div></div>`;
 }
 
-export function rail(ctx, extras = '') {
+export function rail(ctx, extras = '', locked = false) {
     const presets = ctx.state.config.bets.presets.map((value) => (
-        `<button type="button" data-preset="${value}" class="${ctx.state.bet === value ? 'on' : ''}">${ctx.money(value)}</button>`
+        `<button type="button" data-preset="${value}" class="${ctx.state.bet === value ? 'on' : ''}" ${locked ? 'disabled' : ''}>${ctx.money(value)}</button>`
     )).join('');
 
     return `
@@ -18,9 +18,9 @@ export function rail(ctx, extras = '') {
                 <div class="presets">${presets}</div>
             </div>
             <div class="bet-box">
-                <button class="icon-btn" data-bet="-">−</button>
+                <button class="icon-btn" data-bet="-" ${locked ? 'disabled' : ''}>−</button>
                 <strong>${ctx.money(ctx.state.bet)}</strong>
-                <button class="icon-btn" data-bet="+">+</button>
+                <button class="icon-btn" data-bet="+" ${locked ? 'disabled' : ''}>+</button>
                 ${extras}
             </div>
         </div>

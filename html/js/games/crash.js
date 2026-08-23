@@ -34,7 +34,7 @@ function paint(root, ctx) {
             </div>
             ${rail(ctx, live
                 ? '<button class="cta red" data-play="out">Cash out</button>'
-                : '<button class="cta" data-play="start">Start</button>')}
+                : '<button class="cta" data-play="start">Start</button>', live)}
         </div>
     `;
 
