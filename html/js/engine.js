@@ -1,4 +1,5 @@
 import { dicePayout, minesMultiplier } from './defaults.js';
+import { emptyLeaderboard, recordLeaderboard } from './leaderboard.js';
 
 const SUITS = ['s', 'h', 'd', 'c'];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -28,6 +29,8 @@ function history(state, game, bet, payout) {
     if (payout === 0) state.stats.lost += bet;
     state.stats.history.unshift({ game, bet, payout, profit: payout - bet, at: Date.now() / 1000 });
     state.stats.history = state.stats.history.slice(0, 14);
+    const name = state.player?.name || 'You';
+    state.leaderboard = recordLeaderboard(state.leaderboard || emptyLeaderboard(name), name, payout - bet);
 }
 
 function payload(state, extra = {}) {
@@ -35,6 +38,7 @@ function payload(state, extra = {}) {
         ok: true,
         balance: state.balance,
         stats: { ...state.stats, history: state.stats.history.slice() },
+        leaderboard: state.leaderboard,
         ...extra
     };
 }

@@ -86,11 +86,25 @@ if Config.OpenKey then
     RegisterKeyMapping(Config.OpenCommand or 'gambling', 'Open gambling tablet', 'keyboard', Config.OpenKey)
 end
 
-RegisterNetEvent('djfivem_gambling:client:useItem', function()
+local function requestOpen()
     if open then
         return
     end
     TriggerServerEvent('djfivem_gambling:server:open')
+end
+
+RegisterNetEvent('djfivem_gambling:client:useItem', function()
+    requestOpen()
+end)
+
+RegisterNetEvent('djfivem_gambling:client:notify', function(message)
+    BeginTextCommandThefeedPost('STRING')
+    AddTextComponentSubstringPlayerName(message or 'House Tablet')
+    EndTextCommandThefeedPostTicker(false, true)
+end)
+
+exports('useTablet', function()
+    requestOpen()
 end)
 
 if Config.UseItem then

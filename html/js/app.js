@@ -1,6 +1,7 @@
 import { defaultConfig } from './defaults.js';
 import { play as previewPlay } from './engine.js';
 import { views } from './games/index.js';
+import { seedPreviewBoard } from './leaderboard.js';
 import { post, preview } from './nui.js';
 
 const TABS = [
@@ -15,6 +16,7 @@ const TABS = [
     ['wheel', 'Wheel', 'M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16m0 8h8'],
     ['mines', 'Mines', 'M6 6h4v4H6zm8 0h4v4h-4zM6 14h4v4H6zm8 0h4v4h-4z'],
     ['coinflip', 'Flip', 'M12 5a7 7 0 1 1 0 14 7 7 0 0 1 0-14'],
+    ['board', 'Board', 'M6 6h12v4H6zm0 6h5v6H6zm7 0h5v6h-5z'],
     ['odds', 'Odds', 'M5 7h14M5 12h10M5 17h7']
 ];
 
@@ -26,6 +28,7 @@ const state = {
     balance: 5000,
     stats: { wagered: 0, won: 0, lost: 0, lastWin: 0, history: [] },
     config: defaultConfig,
+    leaderboard: seedPreviewBoard('Player'),
     bet: 100,
     busy: false
 };
@@ -98,6 +101,7 @@ function applyResult(result) {
     }
     if (typeof result.balance === 'number') state.balance = result.balance;
     if (result.stats) state.stats = result.stats;
+    if (result.leaderboard) state.leaderboard = result.leaderboard;
     if (result.profit > 0) toast(`Won ${money(result.profit)}`);
     else if (result.payout === 0 && result.bet) toast('House took the bet');
     resultListeners.forEach((listener) => listener(result));
@@ -159,6 +163,7 @@ function openTablet(payload = {}) {
             history: payload.stats.history || []
         };
     }
+    if (payload.leaderboard) state.leaderboard = payload.leaderboard;
     document.getElementById('overlay').classList.remove('hidden');
     renderView();
 }
@@ -183,5 +188,6 @@ window.addEventListener('keydown', (event) => {
 if (preview) {
     document.body.classList.add('preview');
     state.player = { name: 'MoodyNewt8638', role: 'Admin' };
+    state.leaderboard = seedPreviewBoard(state.player.name);
     openTablet();
 }

@@ -92,6 +92,7 @@ local function settle(source, game, bet, payout, extra)
     extra.bet = bet
     extra.payout = payout
     extra.profit = payout - bet
+    extra.leaderboard = Leaderboard.record(source, payout - bet)
     return payload(source, extra)
 end
 
@@ -126,8 +127,12 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent('djfivem_gambling:server:open', function()
-    local source = source
+local function openFor(source)
+    if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
+        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need a House Tablet.')
+        return
+    end
+
     TriggerClientEvent('djfivem_gambling:client:open', source, {
         player = {
             name = Framework.playerName(source),
@@ -135,8 +140,13 @@ RegisterNetEvent('djfivem_gambling:server:open', function()
         },
         config = Odds.publicConfig(),
         balance = Framework.getBalance(source),
-        stats = playerStats(source)
+        stats = playerStats(source),
+        leaderboard = Leaderboard.snapshot(source)
     })
+end
+
+RegisterNetEvent('djfivem_gambling:server:open', function()
+    openFor(source)
 end)
 
 local actions = {}
@@ -437,11 +447,12 @@ AddEventHandler('playerDropped', function()
 end)
 
 exports('openTablet', function(source)
-    TriggerEvent('djfivem_gambling:server:open')
-    TriggerClientEvent('djfivem_gambling:client:open', source, {
-        player = { name = Framework.playerName(source), role = 'Player' },
-        config = Odds.publicConfig(),
-        balance = Framework.getBalance(source),
-        stats = playerStats(source)
-    })
+    openFor(source)
+end)
+
+exports('useTablet', function(event, item, inventory)
+    local src = inventory and (inventory.id or inventory.owner) or source
+    if src then
+        openFor(src)
+    end
 end)

@@ -20,6 +20,7 @@ client_scripts {
 
 server_scripts {
     'server/framework.lua',
+    'server/leaderboard.lua',
     'server/games.lua',
     'server/main.lua'
 }
@@ -27,8 +28,7 @@ server_scripts {
 files {
     'html/index.html',
     'html/css/tablet.css',
-    'html/js/nui.js',
-    'html/js/app.js',
+    'html/js/*.js',
     'html/js/games/*.js'
 }
 

@@ -9,6 +9,7 @@ import { render as baccarat } from './baccarat.js';
 import { render as wheel } from './wheel.js';
 import { render as mines } from './mines.js';
 import { render as coinflip } from './coinflip.js';
+import { render as board } from './board.js';
 import { render as odds } from './odds.js';
 
 export const views = {
@@ -23,5 +24,6 @@ export const views = {
     wheel,
     mines,
     coinflip,
+    board,
     odds
 };

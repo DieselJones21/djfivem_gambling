@@ -133,3 +133,29 @@ function Framework.addMoney(source, amount)
     local key = standaloneKey(source)
     standalone[key] = Framework.getBalance(source) + amount
 end
+
+function Framework.hasItem(source, item)
+    if GetResourceState('ox_inventory') == 'started' then
+        local count
+        if exports.ox_inventory.GetItemCount then
+            count = exports.ox_inventory:GetItemCount(source, item)
+        else
+            count = exports.ox_inventory:Search(source, 'count', item)
+        end
+        return (tonumber(count) or 0) > 0
+    end
+
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        local data = player and player.Functions.GetItemByName(item)
+        return data and ((data.amount or data.count or 0) > 0)
+    end
+
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        local data = player and player.getInventoryItem(item)
+        return data and ((data.count or 0) > 0)
+    end
+
+    return true
+end

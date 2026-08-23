@@ -12,9 +12,16 @@ Config.OpenKey = nil
 -- Shown in the tablet footer and used as a close hint.
 Config.CloseKeyLabel = 'RSHIFT'
 
--- When true, an inventory item can open the tablet.
-Config.UseItem = false
+-- ox_inventory / QB / ESX usable item. The tablet opens from this item.
+Config.UseItem = true
+Config.RequireItem = true
 Config.ItemName = 'gambling_tablet'
+
+-- Lifetime house board. Saved to data/leaderboard.json
+Config.Leaderboard = {
+    size = 10,
+    persist = true
+}
 
 -- Which player account is used for wagers and payouts.
 -- QB/QBX: 'cash' or 'bank'

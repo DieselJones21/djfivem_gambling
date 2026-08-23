@@ -15,41 +15,68 @@ A FiveM gambling tablet with a black / red / white dashboard UI. Every popular t
 - Mines
 - Coin flip
 
-The **Odds** tab shows the live public paytables that the server just sent to the NUI.
+The **Board** tab ranks lifetime money won and money lost. The **Odds** tab shows the live public paytables.
 
 ## Install
 
 1. Drop the resource into `resources/[standalone]/djfivem_gambling`
-2. Add `ensure djfivem_gambling` to `server.cfg`
+2. Add `ensure djfivem_gambling` after `ox_inventory` in `server.cfg`
 3. Set `Config.Framework` in `config.lua` to `standalone`, `qb`, `qbx`, or `esx`
-4. Restart the server and run `/gambling`
+4. Add the `gambling_tablet` item to ox_inventory (below)
+5. Restart and use the item — or `/gambling` if you already have one
 
 Standalone mode keeps a per-license chip balance starting at `Config.StartingBalance`. QB / QBX / ESX debit and credit `Config.Account`.
 
-## Open it
+## Open it with ox_inventory
 
-| Method | How |
-| --- | --- |
-| Command | `/gambling` (`Config.OpenCommand`) |
-| Export | `exports.djfivem_gambling:open()` from client, or `exports.djfivem_gambling:openTablet(source)` from server |
-| Item | Set `Config.UseItem = true` and give `gambling_tablet` |
+`Config.UseItem` and `Config.RequireItem` default to `true`. Using `gambling_tablet` opens the UI. `/gambling` also works, but only if that player actually has the item.
 
-Right Shift (or Escape) closes the tablet. The footer key is only a hint; change the label with `Config.CloseKeyLabel`.
-
-### ox_inventory item
+Paste this into `ox_inventory/data/items.lua`:
 
 ```lua
 ['gambling_tablet'] = {
     label = 'House Tablet',
-    weight = 200,
+    weight = 380,
     stack = false,
     close = true,
-    description = 'A dark casino tablet.',
+    consume = 0,
+    description = 'A black casino tablet. Use it to open the house games.',
     client = {
-        event = 'djfivem_gambling:client:useItem'
+        export = 'djfivem_gambling.useTablet',
+        image = 'gambling_tablet.png',
+        usetime = 250
     }
-}
+},
 ```
+
+Copy `install/ox_inventory/gambling_tablet.png` into `ox_inventory/web/images/`.
+
+Give one with:
+
+```
+/giveitem [id] gambling_tablet 1
+```
+
+or the ox_inventory admin give command.
+
+| Method | How |
+| --- | --- |
+| Item | Use `gambling_tablet` |
+| Command | `/gambling` if `Config.RequireItem` is satisfied |
+| Export | `exports.djfivem_gambling:useTablet()` client, or `exports.djfivem_gambling:openTablet(source)` server |
+
+Right Shift (or Escape) closes the tablet.
+
+Set `Config.RequireItem = false` if you want the command to work without the item.
+
+## Leaderboard
+
+The **Board** tab shows two lists:
+
+- **Most money won** — lifetime profit (payout minus stake on winning hands)
+- **Most money lost** — lifetime losses (stake minus payout on losing hands)
+
+Ranks persist in `data/leaderboard.json` and survive resource restarts. Tune `Config.Leaderboard.size` for how many names to show.
 
 ## Configure odds and payouts
 
@@ -86,9 +113,11 @@ Open `http://127.0.0.1:4173`. Outside FiveM it runs a local engine with the same
 ```
 config.lua            house numbers
 shared/odds.lua       public config + shared math
-client/main.lua       NUI focus and callbacks
+client/main.lua       NUI focus, item export
 server/framework.lua  QB / QBX / ESX / standalone money
+server/leaderboard.lua  persistent won / lost ranks
 server/games.lua      table logic
 server/main.lua       sessions and settlement
+install/ox_inventory  item snippet + icon
 html/                 tablet UI
 ```

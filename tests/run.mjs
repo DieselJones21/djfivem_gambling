@@ -1,5 +1,6 @@
 import { defaultConfig, dicePayout, minesMultiplier } from '../html/js/defaults.js';
 import { play, resetSession } from '../html/js/engine.js';
+import { emptyLeaderboard, recordLeaderboard, seedPreviewBoard } from '../html/js/leaderboard.js';
 
 function assert(condition, message) {
     if (!condition) throw new Error(message);
@@ -86,5 +87,24 @@ for (let i = 0; i < 40; i += 1) {
     }
 }
 assert(sawLoss, 'expected a losing flip while checking recent-win reset');
+
+const board = emptyLeaderboard('You');
+recordLeaderboard(board, 'Vex', 500);
+recordLeaderboard(board, 'Rook', 200);
+recordLeaderboard(board, 'Rook', -900);
+recordLeaderboard(board, 'You', 300);
+assert(board.won[0].name === 'Vex' && board.won[0].amount === 500, 'top winner is highest profit');
+assert(board.lost[0].name === 'Rook' && board.lost[0].amount === 900, 'top loser is highest loss');
+assert(board.mine.won === 300 && board.mine.wonRank === 2, 'current player rank is tracked');
+
+const seeded = seedPreviewBoard('MoodyNewt8638');
+assert(seeded.won.length >= 3, 'preview board has sample winners');
+assert(seeded.lost[0].amount > 0, 'preview board has sample losses');
+
+resetSession();
+app = state();
+app.player = { name: 'Tester' };
+for (let i = 0; i < 8; i += 1) play('coinflip', { bet: 10, side: 'heads' }, app);
+assert(app.leaderboard.mine.won + app.leaderboard.mine.lost > 0, 'engine writes the house board');
 
 console.log('odds and engine checks passed');
