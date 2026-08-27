@@ -1,4 +1,4 @@
-import { defaultConfig, dicePayout, minesMultiplier } from '../html/js/defaults.js';
+import { defaultConfig, dicePayout, minesMultiplier, wheelRtp } from '../html/js/defaults.js';
 import { play, resetSession } from '../html/js/engine.js';
 import { emptyLeaderboard, recordLeaderboard, seedPreviewBoard } from '../html/js/leaderboard.js';
 
@@ -14,7 +14,7 @@ const state = () => ({
 
 const fifty = dicePayout(defaultConfig, 50);
 assert(fifty.chance === 50, 'dice chance clamps to 50');
-assert(fifty.payout === 1.96, `dice 50% payout should be 1.96, got ${fifty.payout}`);
+assert(fifty.payout === 1.84, `dice 50% payout should be 1.84, got ${fifty.payout}`);
 
 const mine = minesMultiplier(defaultConfig, 5, 3);
 assert(mine > 1, 'mines multiplier grows after gems');
@@ -106,5 +106,26 @@ app = state();
 app.player = { name: 'Tester' };
 for (let i = 0; i < 8; i += 1) play('coinflip', { bet: 10, side: 'heads' }, app);
 assert(app.leaderboard.mine.won + app.leaderboard.mine.lost > 0, 'engine writes the house board');
+
+resetSession();
+app = state();
+const crash = play('crash_start', { bet: 100 }, app);
+assert(crash.ok && crash.started, crash.error);
+const blocked = play('mines_start', { bet: 100, mines: 5 }, app);
+assert(!blocked.ok, 'mines waits until crash is settled');
+const cashed = play('crash_cashout', {}, app);
+assert(cashed.ok, cashed.error);
+resetSession();
+app = state();
+const after = play('mines_start', { bet: 100, mines: 5 }, app);
+assert(after.ok && after.board.tiles.length === 25, after.error);
+
+const tooBig = play('slots', { bet: 100001 }, state());
+assert(!tooBig.ok, 'rejects bets over 100k');
+
+const rtp = wheelRtp(defaultConfig.wheel.segments);
+assert(rtp < 1, `wheel RTP must be house-sided, got ${rtp}`);
+assert(defaultConfig.coinflip.winChance < 50, 'coin flip must be worse than even');
+assert(defaultConfig.bets.max === 100000, 'max bet is 100k');
 
 console.log('odds and engine checks passed');

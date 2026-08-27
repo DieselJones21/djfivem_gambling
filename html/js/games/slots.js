@@ -8,7 +8,7 @@ export function render(root, ctx) {
 }
 
 function cell(id) {
-    const label = { seven: '7', diamond: 'DIA', star: '★', bell: 'BELL', bar: 'BAR', cherry: 'CHY' }[id] || id;
+    const label = { seven: '7', diamond: 'DIA', star: '★', bell: 'BELL', bar: 'BAR', cherry: 'CHY', blank: '—' }[id] || id;
     return `<div class="sym ${id}">${label}</div>`;
 }
 
@@ -18,11 +18,13 @@ function paint(root, ctx) {
     const reels = [0, 1, 2, 3, 4].map((reel) => `
         <div class="reel"><div class="reel-track">${[0, 1, 2].map((row) => cell(display[row][reel])).join('')}</div></div>
     `).join('');
-    const table = symbols.map((item) => `<div>${item.label} · <b>3x ${item.payouts[3]}</b> / 5x ${item.payouts[5]}</div>`).join('');
+    const table = symbols
+        .filter((item) => item.payouts && item.payouts[3])
+        .map((item) => `<div>${item.label} · <b>3x ${item.payouts[3]}</b> / 5x ${item.payouts[5]}</div>`).join('');
 
     root.innerHTML = `
         <div class="game">
-            ${head('Slots', 'Five reels, five paylines. Payouts come straight from Config.Slots.')}
+            ${head('Slots', 'Five reels, three paylines. Blanks kill most spins.')}
             <div class="board">
                 <div>
                     <div class="reels">${reels}</div>

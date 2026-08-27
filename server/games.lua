@@ -142,7 +142,11 @@ end
 
 function Games.blackjackAct(session, action)
     if session.done then
-        return session
+        return session, 'Round already settled'
+    end
+
+    if action ~= 'hit' and action ~= 'stand' and action ~= 'double' and action ~= 'split' then
+        return session, 'Invalid action'
     end
 
     local hand = session.player[session.active]
@@ -253,10 +257,21 @@ function Games.rouletteSpin(bet, placement)
     local number = tonumber(pocket)
     local won = false
     local payoutOdd = 0
-    local kind = placement.kind
+    local kind = placement and placement.kind
+    local value = placement and placement.value
 
     if kind == 'straight' then
-        won = tostring(placement.value) == pocket
+        local pocketValue = tostring(value)
+        if pocketValue ~= '0' and pocketValue ~= '00' then
+            local n = tonumber(value)
+            if not n or n < 1 or n > 36 or n % 1 ~= 0 then
+                return nil, 'Invalid straight bet'
+            end
+        end
+        if Config.Roulette.type ~= 'american' and pocketValue == '00' then
+            return nil, 'Invalid straight bet'
+        end
+        won = pocketValue == pocket
         payoutOdd = Config.Roulette.payouts.straight
     elseif kind == 'red' or kind == 'black' then
         if number then
@@ -275,14 +290,20 @@ function Games.rouletteSpin(bet, placement)
             payoutOdd = Config.Roulette.payouts.highlow
         end
     elseif kind == 'dozen' then
-        local dozen = tonumber(placement.value)
-        if number and dozen then
+        local dozen = math.floor(tonumber(value) or 0)
+        if dozen < 1 or dozen > 3 then
+            return nil, 'Invalid dozen bet'
+        end
+        if number then
             won = number >= (dozen - 1) * 12 + 1 and number <= dozen * 12
             payoutOdd = Config.Roulette.payouts.dozen
         end
     elseif kind == 'column' then
-        local column = tonumber(placement.value)
-        if number and column then
+        local column = math.floor(tonumber(value) or 0)
+        if column < 1 or column > 3 then
+            return nil, 'Invalid column bet'
+        end
+        if number then
             won = ((number - 1) % 3) + 1 == column
             payoutOdd = Config.Roulette.payouts.column
         end
@@ -311,14 +332,14 @@ function Games.slotsSpin(bet)
     local paylines = {
         { 2, 2, 2, 2, 2 },
         { 1, 1, 1, 1, 1 },
-        { 3, 3, 3, 3, 3 },
-        { 1, 2, 3, 2, 1 },
-        { 3, 2, 1, 2, 3 }
+        { 3, 3, 3, 3, 3 }
     }
+    local lineCount = math.min(Config.Slots.paylines or 3, #paylines)
 
     local payout = 0
     local hits = {}
-    for lineIndex, line in ipairs(paylines) do
+    for lineIndex = 1, lineCount do
+        local line = paylines[lineIndex]
         local first = grid[line[1]][1]
         local match = 1
         for reel = 2, 5 do

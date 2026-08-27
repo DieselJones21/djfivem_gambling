@@ -98,6 +98,8 @@ Edit `config.lua` and restart the resource. The NUI does not invent numbers — 
 
 Money never settles in the browser when running inside FiveM. The client only animates. The server rolls the outcome, removes the wager, and pays the configured multiple.
 
+Play is rejected unless the tablet is open, the player still has the item, and requests are rate-limited. Crash points are never sent to the NUI. A single round cannot pay more than `Config.MaxPayout`.
+
 ## Preview the UI
 
 The NUI is static files. From `html/`:

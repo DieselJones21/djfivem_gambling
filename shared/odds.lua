@@ -13,13 +13,25 @@ local function copy(value)
 end
 
 function Odds.publicConfig()
+    local slotSymbols = {}
+    for i, symbol in ipairs(Config.Slots.symbols) do
+        slotSymbols[i] = {
+            id = symbol.id,
+            label = symbol.label,
+            payouts = copy(symbol.payouts)
+        }
+    end
+
     return {
         currency = copy(Config.Currency),
         bets = copy(Config.Bets),
         closeKey = Config.CloseKeyLabel,
         blackjack = copy(Config.Blackjack),
         roulette = copy(Config.Roulette),
-        slots = copy(Config.Slots),
+        slots = {
+            paylines = Config.Slots.paylines or 3,
+            symbols = slotSymbols
+        },
         poker = copy(Config.Poker),
         crash = {
             houseEdge = Config.Crash.houseEdge,
@@ -43,6 +55,18 @@ function Odds.clampBet(amount)
         return nil, 'Bet is above the table maximum'
     end
     return amount
+end
+
+function Odds.capPayout(payout)
+    payout = math.floor(tonumber(payout) or 0)
+    if payout < 0 then
+        return 0
+    end
+    local cap = tonumber(Config.MaxPayout)
+    if cap and payout > cap then
+        return cap
+    end
+    return payout
 end
 
 function Odds.dicePayout(chance)
