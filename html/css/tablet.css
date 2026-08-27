@@ -1,16 +1,18 @@
 :root {
-    --bg: #0b0b0d;
-    --panel: #121216;
-    --card: #18181d;
-    --card-2: #1d1d23;
-    --line: #2a2a32;
-    --text: #ffffff;
-    --muted: #8b8b96;
-    --red: #e11d2e;
-    --red-deep: #b31220;
-    --red-soft: rgba(225, 29, 46, 0.16);
-    --radius: 12px;
+    --bg: #050507;
+    --panel: #0c0c10;
+    --card: #131318;
+    --card-2: #1a1a22;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f6f6f8;
+    --muted: #9b9ba8;
+    --accent: #ff3358;
+    --accent-deep: #c81e42;
+    --accent-soft: rgba(255, 51, 88, 0.16);
+    --red: var(--accent);
+    --radius: 16px;
     --font: "Segoe UI", Inter, system-ui, sans-serif;
+    --glow: 0 18px 60px rgba(255, 51, 88, 0.16);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +28,9 @@ html, body {
 }
 
 body.preview {
-    background: radial-gradient(circle at 50% 20%, #1a1a20, #050506 70%);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(255, 51, 88, 0.18), transparent 42%),
+        radial-gradient(circle at 50% 80%, #121218, #050506 70%);
 }
 
 button, input { font: inherit; color: inherit; }
@@ -43,14 +47,14 @@ button, input { font: inherit; color: inherit; }
 .tablet {
     width: min(1180px, 94vw);
     height: min(760px, 90vh);
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 18px;
+    background: linear-gradient(180deg, #0c0c10 0%, #070709 100%);
+    border: 1px solid rgba(255, 51, 88, 0.22);
+    border-radius: 22px;
     padding: 16px 16px 12px;
     display: grid;
     grid-template-rows: auto auto 1fr auto;
     gap: 12px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--glow), 0 24px 80px rgba(0, 0, 0, 0.55);
 }
 
 .chrome {
@@ -69,9 +73,9 @@ button, input { font: inherit; color: inherit; }
 .nav button {
     height: 36px;
     border: 1px solid transparent;
-    background: #141418;
+    background: #101014;
     color: #fff;
-    border-radius: 8px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -90,8 +94,8 @@ button, input { font: inherit; color: inherit; }
 }
 
 .nav button.active {
-    background: #26262d;
-    border-color: #fff;
+    background: var(--accent-soft);
+    border-color: var(--accent);
 }
 
 .nav button:hover:not(.active) { background: #1b1b21; }
@@ -119,8 +123,10 @@ button, input { font: inherit; color: inherit; }
 
 .stat {
     background: var(--card);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 12px 14px 11px;
+    box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .stat > span {
@@ -162,7 +168,8 @@ button, input { font: inherit; color: inherit; }
 .view {
     min-height: 0;
     background: var(--panel);
-    border-radius: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
     padding: 16px;
     overflow: auto;
 }
@@ -192,8 +199,8 @@ button, input { font: inherit; color: inherit; }
 }
 
 .toggle.on {
-    background: #fff;
-    color: #111;
+    background: var(--accent);
+    color: #fff;
     font-weight: 700;
 }
 
@@ -247,7 +254,7 @@ button, input { font: inherit; color: inherit; }
 }
 
 .history .up { color: #fff; }
-.history .down { color: var(--red); }
+.history .down { color: var(--accent); }
 
 .game {
     height: 100%;
@@ -267,9 +274,11 @@ button, input { font: inherit; color: inherit; }
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background: #141418;
-    border-radius: 10px;
+    background: #101014;
+    border: 1px solid var(--line);
+    border-radius: 14px;
     padding: 10px;
+    flex-wrap: wrap;
 }
 
 .bet-box { display: flex; align-items: center; gap: 8px; }
@@ -294,11 +303,13 @@ button, input { font: inherit; color: inherit; }
     color: #111;
     font-weight: 700;
     min-width: 108px;
+    border-radius: 10px;
 }
 
 .cta.red {
-    background: var(--red);
+    background: linear-gradient(180deg, #ff5474 0%, var(--accent) 100%);
     color: #fff;
+    box-shadow: 0 8px 20px rgba(255, 51, 88, 0.28);
 }
 
 .cta:disabled, .ghost:disabled, .icon-btn:disabled {
@@ -306,19 +317,19 @@ button, input { font: inherit; color: inherit; }
     cursor: default;
 }
 
-.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.presets { display: flex; gap: 5px; flex-wrap: wrap; max-width: 640px; }
 
 .presets button {
-    height: 28px;
+    height: 26px;
     border: 0;
     border-radius: 999px;
-    background: #23232b;
-    padding: 0 10px;
-    font-size: 11px;
+    background: #1c1c24;
+    padding: 0 8px;
+    font-size: 10px;
     cursor: pointer;
 }
 
-.presets button.on { background: #fff; color: #111; font-weight: 700; }
+.presets button.on { background: var(--accent); color: #fff; font-weight: 700; }
 
 .cards { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
@@ -447,6 +458,7 @@ button, input { font: inherit; color: inherit; }
 .sym.star, .sym.bell { color: #f3f3f6; }
 .sym.bar { color: var(--muted); }
 .sym.cherry { color: var(--red); }
+.sym.blank { color: #3a3a44; font-size: 14px; }
 
 .paytable {
     display: grid;

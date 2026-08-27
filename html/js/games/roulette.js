@@ -27,7 +27,8 @@ function paint(root, ctx) {
                     </div>
                     <div class="felt">
                         <div class="outers">
-                            <button type="button" class="green ${placement.kind === 'straight' && placement.value === '0' ? 'on' : ''}" data-kind="straight" data-value="0">0</button>
+                            <button type="button" class="green ${placement.kind === 'straight' && String(placement.value) === '0' ? 'on' : ''}" data-kind="straight" data-value="0">0</button>
+                            ${ctx.state.config.roulette.type === 'american' ? `<button type="button" class="green ${placement.kind === 'straight' && String(placement.value) === '00' ? 'on' : ''}" data-kind="straight" data-value="00">00</button>` : ''}
                             <button type="button" class="red ${placement.kind === 'red' ? 'on' : ''}" data-kind="red">Red</button>
                             <button type="button" class="${placement.kind === 'black' ? 'on' : ''}" data-kind="black">Black</button>
                             <button type="button" class="${placement.kind === 'even' ? 'on' : ''}" data-kind="even">Even</button>
@@ -42,6 +43,7 @@ function paint(root, ctx) {
                             <button type="button" class="${placement.kind === 'dozen' && placement.value === 3 ? 'on' : ''}" data-kind="dozen" data-value="3">3rd 12</button>
                             <button type="button" class="${placement.kind === 'column' && placement.value === 1 ? 'on' : ''}" data-kind="column" data-value="1">Col 1</button>
                             <button type="button" class="${placement.kind === 'column' && placement.value === 2 ? 'on' : ''}" data-kind="column" data-value="2">Col 2</button>
+                            <button type="button" class="${placement.kind === 'column' && placement.value === 3 ? 'on' : ''}" data-kind="column" data-value="3">Col 3</button>
                         </div>
                     </div>
                 </div>

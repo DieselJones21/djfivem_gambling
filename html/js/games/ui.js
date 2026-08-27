@@ -1,3 +1,10 @@
+export function shortMoney(value, symbol = '$') {
+    const n = Math.floor(Number(value) || 0);
+    if (n >= 1000 && n % 1000 === 0) return `${symbol}${n / 1000}k`;
+    if (n >= 1000) return `${symbol}${(n / 1000).toFixed(n % 100 === 0 ? 1 : 2)}k`;
+    return `${symbol}${n.toLocaleString('en-US')}`;
+}
+
 export function cardNode(card) {
     if (!card || card.hidden) {
         return `<div class="playing-card back"><em>◆</em></div>`;
@@ -9,7 +16,7 @@ export function cardNode(card) {
 
 export function rail(ctx, extras = '', locked = false) {
     const presets = ctx.state.config.bets.presets.map((value) => (
-        `<button type="button" data-preset="${value}" class="${ctx.state.bet === value ? 'on' : ''}" ${locked ? 'disabled' : ''}>${ctx.money(value)}</button>`
+        `<button type="button" data-preset="${value}" class="${ctx.state.bet === value ? 'on' : ''}" ${locked ? 'disabled' : ''}>${shortMoney(value)}</button>`
     )).join('');
 
     return `
@@ -35,8 +42,17 @@ export function bindRail(root, ctx, onPlay) {
     });
     root.querySelectorAll('[data-bet]').forEach((button) => {
         button.addEventListener('click', () => {
-            const step = ctx.state.config.bets.presets[0] || 10;
-            ctx.setBet(button.dataset.bet === '+' ? ctx.state.bet + step : ctx.state.bet - step);
+            const presets = ctx.state.config.bets.presets;
+            const current = ctx.state.bet;
+            const idx = presets.findIndex((value) => value >= current);
+            if (button.dataset.bet === '+') {
+                const next = presets.find((value) => value > current);
+                ctx.setBet(next || ctx.state.config.bets.max);
+            } else {
+                const prev = [...presets].reverse().find((value) => value < current);
+                ctx.setBet(prev || ctx.state.config.bets.min);
+            }
+            void idx;
         });
     });
     if (onPlay) {

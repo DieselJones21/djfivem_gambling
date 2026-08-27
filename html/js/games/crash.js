@@ -22,6 +22,7 @@ export function render(root, ctx) {
 }
 
 function paint(root, ctx) {
+    const max = ctx.state.config.crash.maxMultiplier || 20;
     root.innerHTML = `
         <div class="game">
             ${head('Crash', `House edge ${(ctx.state.config.crash.houseEdge * 100).toFixed(1)}%. Cash out before the graph dies.`)}
@@ -60,6 +61,7 @@ function paint(root, ctx) {
                     paint(root, ctx);
                     return;
                 }
+                if (shown >= max) shown = max;
                 const mult = root.querySelector('#mult');
                 const bar = root.querySelector('#bar');
                 if (mult) {

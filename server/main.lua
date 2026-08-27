@@ -1,5 +1,34 @@
 local sessions = {}
 local stats = {}
+local opened = {}
+local lastPlay = {}
+local RATE_FREE = {
+    blackjack_act = true,
+    crash_cashout = true,
+    crash_bust = true,
+    mines_reveal = true,
+    mines_cashout = true,
+    poker_draw = true
+}
+
+local ALLOWED = {
+    blackjack_deal = true,
+    blackjack_act = true,
+    roulette = true,
+    slots = true,
+    poker_deal = true,
+    poker_draw = true,
+    crash_start = true,
+    crash_cashout = true,
+    crash_bust = true,
+    dice = true,
+    baccarat = true,
+    wheel = true,
+    mines_start = true,
+    mines_reveal = true,
+    mines_cashout = true,
+    coinflip = true
+}
 
 local function emptyStats()
     return {
@@ -83,6 +112,8 @@ local function takeBet(source, amount)
 end
 
 local function settle(source, game, bet, payout, extra)
+    payout = Odds.capPayout(payout)
+    bet = math.floor(tonumber(bet) or 0)
     if payout > 0 then
         Framework.addMoney(source, payout)
     end
@@ -115,6 +146,36 @@ local function crashDuration(point)
     return math.log(math.max(1.01, point)) / CRASH_GROWTH
 end
 
+local function forfeit(source)
+    local session = sessions[source]
+    if not session or not session.bet then
+        sessions[source] = nil
+        return
+    end
+    local kind = session.kind or 'table'
+    local bet = session.bet
+    sessions[source] = nil
+    settle(source, kind, bet, 0, { forfeited = true })
+end
+
+local function canPlay(source, action)
+    if not opened[source] then
+        return nil, 'Tablet is closed'
+    end
+    if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
+        return nil, 'You need a House Tablet.'
+    end
+    if not RATE_FREE[action] then
+        local now = GetGameTimer()
+        local wait = tonumber(Config.PlayRateMs) or 150
+        if lastPlay[source] and now - lastPlay[source] < wait then
+            return nil, 'Slow down'
+        end
+        lastPlay[source] = now
+    end
+    return true
+end
+
 CreateThread(function()
     if not Config.UseItem then
         return
@@ -133,6 +194,9 @@ local function openFor(source)
         return
     end
 
+    opened[source] = true
+    lastPlay[source] = 0
+
     TriggerClientEvent('djfivem_gambling:client:open', source, {
         player = {
             name = Framework.playerName(source),
@@ -147,6 +211,12 @@ end
 
 RegisterNetEvent('djfivem_gambling:server:open', function()
     openFor(source)
+end)
+
+RegisterNetEvent('djfivem_gambling:server:close', function()
+    local source = source
+    opened[source] = nil
+    forfeit(source)
 end)
 
 local actions = {}
@@ -176,15 +246,26 @@ function actions.blackjack_act(source, data)
     end
 
     local extraBet = 0
-    if data.action == 'double' or data.action == 'split' then
+    if data.action ~= 'hit' and data.action ~= 'stand' and data.action ~= 'double' and data.action ~= 'split' then
+        return fail('Invalid action')
+    end
+    if data.action == 'double' then
+        if not Config.Blackjack.allowDouble or #session.player[session.active] ~= 2 then
+            return fail('Double is not available')
+        end
         extraBet = session.bet
         if not Framework.removeMoney(source, extraBet) then
             return fail('Not enough chips for that action')
         end
-        if data.action == 'double' then
-            -- money already reserved; payout logic uses doubled wager
-        else
-            -- split opens a second hand at the same stake
+    elseif data.action == 'split' then
+        if not Config.Blackjack.allowSplit
+            or #session.player >= Config.Blackjack.maxSplitHands
+            or #session.player[session.active] ~= 2 then
+            return fail('Split is not available')
+        end
+        extraBet = session.bet
+        if not Framework.removeMoney(source, extraBet) then
+            return fail('Not enough chips for that action')
         end
     end
 
@@ -255,7 +336,11 @@ function actions.poker_draw(source, data)
     if not session or session.kind ~= 'poker' then
         return fail('No poker round is open')
     end
-    Games.pokerDraw(session, data.held or {})
+    local held = {}
+    for i = 1, 5 do
+        held[i] = data.held and data.held[i] == true
+    end
+    Games.pokerDraw(session, held)
     sessions[source] = nil
     return settle(source, 'poker', session.bet, session.payout, {
         cards = session.cards,
@@ -277,7 +362,7 @@ function actions.crash_start(source, data)
         kind = 'crash',
         bet = bet,
         crash = crash,
-        started = os.clock(),
+        started = GetGameTimer(),
         src = source
     }
     sessions[source] = session
@@ -289,15 +374,15 @@ function actions.crash_start(source, data)
             return
         end
         sessions[source] = nil
-        TriggerClientEvent('djfivem_gambling:client:result', source, settle(source, 'crash', session.bet, 0, {
+        local result = settle(source, 'crash', session.bet, 0, {
             crash = session.crash,
             busted = true
-        }))
+        })
+        TriggerClientEvent('djfivem_gambling:client:result', source, result)
     end)
 
     return payload(source, {
         started = true,
-        crash = crash,
         growth = CRASH_GROWTH,
         tickMs = Config.Crash.tickMs,
         maxMultiplier = Config.Crash.maxMultiplier
@@ -310,7 +395,7 @@ function actions.crash_cashout(source)
         return fail('No crash round is open')
     end
 
-    local elapsed = os.clock() - session.started
+    local elapsed = (GetGameTimer() - session.started) / 1000.0
     local current = crashMultiplier(elapsed)
     if current >= session.crash then
         sessions[source] = nil
@@ -330,11 +415,18 @@ function actions.crash_bust(source)
     if not session or session.kind ~= 'crash' then
         return fail('No crash round is open')
     end
+    local elapsed = (GetGameTimer() - session.started) / 1000.0
+    if crashMultiplier(elapsed) < session.crash then
+        return fail('Round still live')
+    end
     sessions[source] = nil
     return settle(source, 'crash', session.bet, 0, { crash = session.crash, busted = true })
 end
 
 function actions.dice(source, data)
+    if data.target ~= 'over' and data.target ~= 'under' then
+        return fail('Choose over or under')
+    end
     local bet, err = takeBet(source, data.bet)
     if not bet then
         return fail(err)
@@ -426,6 +518,15 @@ end
 
 RegisterNetEvent('djfivem_gambling:server:play', function(action, data)
     local source = source
+    if type(action) ~= 'string' or not ALLOWED[action] then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'))
+        return
+    end
+    local allowed, err = canPlay(source, action)
+    if not allowed then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail(err))
+        return
+    end
     local handler = actions[action]
     if not handler then
         TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'))
@@ -442,7 +543,9 @@ end)
 
 AddEventHandler('playerDropped', function()
     local source = source
-    sessions[source] = nil
+    opened[source] = nil
+    lastPlay[source] = nil
+    forfeit(source)
     stats[source] = nil
 end)
 

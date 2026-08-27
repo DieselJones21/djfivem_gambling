@@ -11,7 +11,7 @@ function paint(root, ctx) {
     const dealer = table?.dealer || [];
     root.innerHTML = `
         <div class="game">
-            ${head('Blackjack', `Blackjack pays ${ctx.state.config.blackjack.blackjackPayout === 1.5 ? '3:2' : ctx.state.config.blackjack.blackjackPayout + 'x'}. Dealer stands on 17.`)}
+            ${head('Blackjack', `Blackjack pays ${ctx.state.config.blackjack.blackjackPayout === 1.5 ? '3:2' : ctx.state.config.blackjack.blackjackPayout === 1.2 ? '6:5' : ctx.state.config.blackjack.blackjackPayout + 'x'}. Dealer ${ctx.state.config.blackjack.dealerHitsSoft17 ? 'hits' : 'stands on'} soft 17.`)}
             <div class="board">
                 <div class="bj">
                     <div class="bj-row">

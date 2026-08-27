@@ -38,24 +38,31 @@ Config.Currency = {
 
 Config.Bets = {
     min = 10,
-    max = 25000,
-    presets = { 10, 50, 100, 250, 500, 1000, 2500, 5000 }
+    max = 100000,
+    presets = { 10, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000 }
 }
+
+-- Hard cap on a single round's returned chips (stake already taken).
+Config.MaxPayout = 250000
+
+-- Minimum milliseconds between play requests from one player.
+Config.PlayRateMs = 150
 
 --[[
     House-facing odds and payouts.
-    Every game reads these values at runtime. Change numbers here,
+    Tuned so every table is negative-EV. Change numbers here,
     restart the resource, and both the NUI paytables and server
     settlement use the new values.
 
     payout = profit multiple on a winning 1-unit stake unless noted.
     A payout of 1 means even money (stake returned + 1x profit).
+    Wheel/slots payouts are total-return multiples of the stake.
 ]]
 
 Config.Blackjack = {
     decks = 6,
-    blackjackPayout = 1.5, -- 3:2. Use 1.2 for 6:5
-    dealerHitsSoft17 = false,
+    blackjackPayout = 1.2, -- 6:5, harder than 3:2
+    dealerHitsSoft17 = true,
     allowDouble = true,
     allowSplit = true,
     allowInsurance = false,
@@ -64,8 +71,8 @@ Config.Blackjack = {
 }
 
 Config.Roulette = {
-    -- 'european' = single zero (0). 'american' = 0 and 00
-    type = 'european',
+    -- American double-zero (~5.26% house on even money).
+    type = 'american',
     payouts = {
         straight = 35,
         redblack = 1,
@@ -77,85 +84,75 @@ Config.Roulette = {
 }
 
 Config.Slots = {
-    -- Five independent reels, three visible rows, five paylines.
-    -- Symbol weights control frequency. payouts[matchCount] is the
-    -- profit multiple for that many-of-a-kind on a single payline.
+    -- Three paylines. Blank symbols eat most spins.
+    paylines = 3,
     symbols = {
-        { id = 'seven',  label = '7',     weight = 4,  payouts = { [3] = 15, [4] = 50,  [5] = 250 } },
-        { id = 'diamond',label = 'DIA',   weight = 8,  payouts = { [3] = 8,  [4] = 25,  [5] = 80 } },
-        { id = 'star',   label = 'STAR',  weight = 12, payouts = { [3] = 5,  [4] = 12,  [5] = 40 } },
-        { id = 'bell',   label = 'BELL',  weight = 16, payouts = { [3] = 3,  [4] = 8,   [5] = 20 } },
-        { id = 'bar',    label = 'BAR',   weight = 20, payouts = { [3] = 2,  [4] = 5,   [5] = 12 } },
-        { id = 'cherry', label = 'CHERRY',weight = 26, payouts = { [3] = 1,  [4] = 3,   [5] = 8 } }
+        { id = 'seven',  label = '7',     weight = 2,  payouts = { [3] = 8,  [4] = 20, [5] = 80 } },
+        { id = 'diamond',label = 'DIA',   weight = 4,  payouts = { [3] = 4,  [4] = 10, [5] = 25 } },
+        { id = 'star',   label = 'STAR',  weight = 6,  payouts = { [3] = 3,  [4] = 6,  [5] = 15 } },
+        { id = 'bell',   label = 'BELL',  weight = 8,  payouts = { [3] = 2,  [4] = 4,  [5] = 8 } },
+        { id = 'bar',    label = 'BAR',   weight = 10, payouts = { [3] = 1,  [4] = 3,  [5] = 5 } },
+        { id = 'cherry', label = 'CHERRY',weight = 14, payouts = { [3] = 1,  [4] = 2,  [5] = 3 } },
+        { id = 'blank',  label = '',      weight = 46, payouts = {} }
     }
 }
 
 Config.Poker = {
-    -- Jacks or Better video poker. Values are profit multiples for 1 coin.
-    -- Royal is conventionally 800 on a 5-coin max bet; we apply the table
-    -- to the full wager so a royal pays stake * royal.
+    -- 6/5 Jacks or Better, cut jackpot.
     paytable = {
-        royal = 800,
-        straightFlush = 50,
-        fours = 25,
-        fullHouse = 9,
-        flush = 6,
-        straight = 4,
-        trips = 3,
-        twoPair = 2,
+        royal = 250,
+        straightFlush = 40,
+        fours = 20,
+        fullHouse = 6,
+        flush = 5,
+        straight = 3,
+        trips = 2,
+        twoPair = 1,
         jacksOrBetter = 1
     }
 }
 
 Config.Crash = {
-    -- Instant-bust chance plus growth curve. Higher houseEdge lowers the
-    -- average cashout multiplier.
-    houseEdge = 0.04,
-    instantCrashChance = 0.03,
-    maxMultiplier = 100,
+    houseEdge = 0.12,
+    instantCrashChance = 0.10,
+    maxMultiplier = 20,
     tickMs = 80
 }
 
 Config.Dice = {
-    -- Slider is win chance 2–98. Payout = (100 - houseEdgePercent) / chance.
-    houseEdgePercent = 2,
-    minChance = 2,
-    maxChance = 98
+    houseEdgePercent = 8,
+    minChance = 10,
+    maxChance = 85
 }
 
 Config.Baccarat = {
-    playerPayout = 1.0,
-    bankerPayout = 0.95, -- 5% commission
+    playerPayout = 0.85,
+    bankerPayout = 0.80,
     tiePayout = 8.0
 }
 
 Config.Wheel = {
-    -- Weighted segments. payout is a total-return multiple of the stake
-    -- (2 = even money, 0 = lose stake).
+    -- Weighted for ~0.87 RTP. Most mass is 0x / 1x.
     segments = {
-        { label = '1x',  payout = 1,  weight = 28, tone = 'mute' },
-        { label = '2x',  payout = 2,  weight = 22, tone = 'white' },
-        { label = '3x',  payout = 3,  weight = 16, tone = 'red' },
-        { label = '5x',  payout = 5,  weight = 12, tone = 'white' },
-        { label = '8x',  payout = 8,  weight = 8,  tone = 'red' },
-        { label = '15x', payout = 15, weight = 6,  tone = 'white' },
-        { label = '25x', payout = 25, weight = 5,  tone = 'red' },
-        { label = '50x', payout = 50, weight = 2,  tone = 'white' },
-        { label = '0x',  payout = 0,  weight = 1,  tone = 'dead' }
+        { label = '0x', payout = 0, weight = 50, tone = 'dead' },
+        { label = '1x', payout = 1, weight = 30, tone = 'mute' },
+        { label = '2x', payout = 2, weight = 12, tone = 'white' },
+        { label = '3x', payout = 3, weight = 5,  tone = 'red' },
+        { label = '5x', payout = 5, weight = 2,  tone = 'white' },
+        { label = '8x', payout = 8, weight = 1,  tone = 'red' }
     }
 }
 
 Config.Mines = {
     grid = 25,
-    minMines = 1,
+    minMines = 3,
     maxMines = 20,
-    defaultMines = 5,
-    houseEdge = 0.03
+    defaultMines = 8,
+    houseEdge = 0.12
 }
 
 Config.Coinflip = {
-    -- Fair coin is 50. Lower this to add house edge while keeping 2x payout.
-    winChance = 48,
+    winChance = 43,
     payout = 2
 }
 

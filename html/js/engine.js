@@ -44,6 +44,9 @@ function payload(state, extra = {}) {
 }
 
 function settle(state, game, bet, payout, extra = {}) {
+    payout = Math.floor(Number(payout) || 0);
+    const cap = state.config.maxPayout || 250000;
+    if (payout > cap) payout = cap;
     if (payout > 0) state.balance += payout;
     history(state, game, bet, payout);
     return payload(state, { game, bet, payout, profit: payout - bet, ...extra });
@@ -318,10 +321,8 @@ const actions = {
         const lines = [
             [1, 1, 1, 1, 1],
             [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 1, 2, 1, 0],
-            [2, 1, 0, 1, 2]
-        ];
+            [2, 2, 2, 2, 2]
+        ].slice(0, state.config.slots.paylines || 3);
         let payout = 0;
         const hits = [];
         lines.forEach((line, lineIndex) => {
@@ -375,7 +376,7 @@ const actions = {
         if (error) return fail(error);
         const edge = state.config.crash.houseEdge;
         let crash = 1;
-        if (Math.random() >= 0.03) {
+        if (Math.random() >= 0.10) {
             crash = Math.min(state.config.crash.maxMultiplier, (1 - edge) / Math.max(0.0001, 1 - Math.random()));
             crash = Math.round(crash * 100) / 100;
         }

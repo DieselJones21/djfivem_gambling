@@ -30,7 +30,7 @@ export function render(root, ctx) {
             <article class="panel">
                 <h3>Slots</h3>
                 <dl>
-                    ${cfg.slots.symbols.map((item) => `<dt>${item.label}</dt><dd>3x ${item.payouts[3]} · 5x ${item.payouts[5]}</dd>`).join('')}
+                    ${cfg.slots.symbols.filter((item) => item.payouts && item.payouts[3]).map((item) => `<dt>${item.label}</dt><dd>3x ${item.payouts[3]} · 5x ${item.payouts[5]}</dd>`).join('')}
                 </dl>
             </article>
             <article class="panel">

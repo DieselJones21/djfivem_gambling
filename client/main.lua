@@ -20,6 +20,7 @@ local function closeTablet()
     pending = nil
     setFocus(false)
     send('close')
+    TriggerServerEvent('djfivem_gambling:server:close')
 end
 
 local function openTablet(payload)
@@ -66,6 +67,10 @@ RegisterNUICallback('close', function(_, cb)
 end)
 
 RegisterNUICallback('play', function(body, cb)
+    if not open then
+        cb({ ok = false, error = 'Tablet is closed' })
+        return
+    end
     local action = body and body.action
     if not action then
         cb({ ok = false, error = 'Missing action' })
