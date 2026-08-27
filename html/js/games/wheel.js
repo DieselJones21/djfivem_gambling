@@ -4,7 +4,7 @@ let last = null;
 let angle = 0;
 
 const TONES = {
-    red: '#ff3358',
+    red: '#e31c3d',
     white: '#f4f4f6',
     mute: '#2a2a32',
     dead: '#111114'

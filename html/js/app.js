@@ -66,14 +66,16 @@ function setBet(value) {
 function syncChrome() {
     document.getElementById('playerName').textContent = state.player.name;
     document.getElementById('playerRole').textContent = state.player.role;
+    const avatar = document.getElementById('playerAvatar');
+    if (avatar) avatar.textContent = (state.player.name || 'H').trim().charAt(0).toUpperCase();
     document.getElementById('statBalance').textContent = money(state.balance);
     document.getElementById('statWin').textContent = money(state.stats.lastWin || 0);
     document.getElementById('statWagered').textContent = money(state.stats.wagered || 0);
     document.getElementById('statWinChip').textContent = `+${Math.floor(state.stats.lastWin || 0)}`;
-    document.getElementById('closeBtn').textContent = state.config.closeKey || 'RSHIFT';
+    document.getElementById('closeBtn').textContent = `${state.config.closeKey || 'RSHIFT'} (Close)`;
     document.getElementById('statusLine').textContent = preview
-        ? 'Preview mode. FiveM uses the same UI with server-authoritative settlement.'
-        : 'House edge and payouts are live from the server config.';
+        ? 'House Tablet · preview'
+        : 'House Tablet';
     document.querySelectorAll('#nav button').forEach((button) => {
         button.classList.toggle('active', button.dataset.view === state.view);
     });
@@ -188,6 +190,23 @@ window.addEventListener('keydown', (event) => {
 if (preview) {
     document.body.classList.add('preview');
     state.player = { name: 'MoodyNewt8638', role: 'Admin' };
+    state.balance = 3510;
+    state.stats = {
+        wagered: 8420,
+        won: 3910,
+        lost: 2100,
+        lastWin: 240,
+        history: [
+            { game: 'blackjack', bet: 250, payout: 550, profit: 300 },
+            { game: 'roulette', bet: 100, payout: 0, profit: -100 },
+            { game: 'slots', bet: 50, payout: 0, profit: -50 },
+            { game: 'crash', bet: 200, payout: 440, profit: 240 },
+            { game: 'dice', bet: 100, payout: 184, profit: 84 },
+            { game: 'wheel', bet: 500, payout: 0, profit: -500 },
+            { game: 'coinflip', bet: 100, payout: 200, profit: 100 },
+            { game: 'mines', bet: 250, payout: 0, profit: -250 }
+        ]
+    };
     state.leaderboard = seedPreviewBoard(state.player.name);
     openTablet();
 }

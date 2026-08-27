@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>House Tablet</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23050507'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff3358'/%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0b0d'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%23e31c3d'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/tablet.css">
 </head>
 <body>
@@ -17,13 +17,7 @@
                         <strong id="playerName">Player</strong>
                         <span id="playerRole">Player</span>
                     </div>
-                    <div class="avatar" aria-hidden="true">
-                        <svg viewBox="0 0 40 40">
-                            <circle cx="20" cy="20" r="18" fill="#16161a" stroke="#ff3358" stroke-width="2"/>
-                            <circle cx="20" cy="16" r="6" fill="#fff"/>
-                            <path d="M8 32c3-7 21-7 24 0" fill="#fff"/>
-                        </svg>
-                    </div>
+                    <div class="avatar" id="playerAvatar" aria-hidden="true">H</div>
                 </div>
             </header>
 
@@ -54,8 +48,8 @@
             <main id="view" class="view"></main>
 
             <footer class="dock">
-                <p id="statusLine">House edge and payouts are live from the server config.</p>
-                <button id="closeBtn" class="key" type="button">RSHIFT</button>
+                <p id="statusLine">House Tablet</p>
+                <button id="closeBtn" class="key" type="button">RSHIFT (Close)</button>
             </footer>
         </div>
     </div>
