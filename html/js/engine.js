@@ -6,6 +6,15 @@ const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
 let session = null;
+let crashTimer = 0;
+const CRASH_GROWTH = 0.065;
+
+function clearCrashTimer() {
+    if (crashTimer) {
+        clearTimeout(crashTimer);
+        crashTimer = 0;
+    }
+}
 
 function clampBet(config, amount) {
     const value = Math.floor(Number(amount) || 0);
@@ -380,18 +389,28 @@ const actions = {
             crash = Math.min(state.config.crash.maxMultiplier, (1 - edge) / Math.max(0.0001, 1 - Math.random()));
             crash = Math.round(crash * 100) / 100;
         }
-        session = { kind: 'crash', bet, crash, started: performance.now() };
-        return payload(state, { started: true, crash, growth: 0.065, tickMs: state.config.crash.tickMs, maxMultiplier: state.config.crash.maxMultiplier });
+        session = { kind: 'crash', bet, crash, started: performance.now(), owner: state };
+        clearCrashTimer();
+        const duration = Math.log(Math.max(1.01, crash)) / CRASH_GROWTH;
+        crashTimer = setTimeout(() => {
+            if (!session || session.kind !== 'crash') return;
+            const live = session;
+            session = null;
+            clearCrashTimer();
+            settle(live.owner, 'crash', live.bet, 0, { crash: live.crash, busted: true });
+        }, Math.floor(duration * 1000));
+        return payload(state, { started: true, crash, growth: CRASH_GROWTH, tickMs: state.config.crash.tickMs, maxMultiplier: state.config.crash.maxMultiplier });
     },
 
     crash_cashout(state) {
         if (!session || session.kind !== 'crash') return fail('No crash round is open');
         const elapsed = (performance.now() - session.started) / 1000;
-        const current = Math.round(Math.exp(0.065 * elapsed) * 100) / 100;
+        const current = Math.round(Math.exp(CRASH_GROWTH * elapsed) * 100) / 100;
         const busted = current >= session.crash;
         const payout = busted ? 0 : Math.floor(session.bet * Math.min(current, session.crash - 0.01));
         const result = settle(state, 'crash', session.bet, payout, { crash: session.crash, cashed: current, busted });
         session = null;
+        clearCrashTimer();
         return result;
     },
 
@@ -399,6 +418,7 @@ const actions = {
         if (!session || session.kind !== 'crash') return fail('No crash round is open');
         const result = settle(state, 'crash', session.bet, 0, { crash: session.crash, busted: true });
         session = null;
+        clearCrashTimer();
         return result;
     },
 
@@ -539,4 +559,5 @@ export function play(action, data, state) {
 
 export function resetSession() {
     session = null;
+    clearCrashTimer();
 }

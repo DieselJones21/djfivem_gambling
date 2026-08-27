@@ -107,6 +107,19 @@ app.player = { name: 'Tester' };
 for (let i = 0; i < 8; i += 1) play('coinflip', { bet: 10, side: 'heads' }, app);
 assert(app.leaderboard.mine.won + app.leaderboard.mine.lost > 0, 'engine writes the house board');
 
+resetSession();
+app = state();
+const crash = play('crash_start', { bet: 100 }, app);
+assert(crash.ok && crash.started, crash.error);
+const blocked = play('mines_start', { bet: 100, mines: 5 }, app);
+assert(!blocked.ok, 'mines waits until crash is settled');
+const cashed = play('crash_cashout', {}, app);
+assert(cashed.ok, cashed.error);
+resetSession();
+app = state();
+const after = play('mines_start', { bet: 100, mines: 5 }, app);
+assert(after.ok && after.board.tiles.length === 25, after.error);
+
 const tooBig = play('slots', { bet: 100001 }, state());
 assert(!tooBig.ok, 'rejects bets over 100k');
 

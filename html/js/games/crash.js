@@ -3,21 +3,31 @@ import { bindRail, head, rail } from './ui.js';
 let live = false;
 let shown = 1;
 let timer = 0;
+let tick = 0;
 let crashAt = 0;
+
+function stopRound() {
+    tick += 1;
+    window.clearInterval(timer);
+    timer = 0;
+}
 
 export function render(root, ctx) {
     const stop = ctx.onResult((result) => {
         if (!result.busted && !result.cashed) return;
-        window.clearInterval(timer);
+        stopRound();
         live = false;
         crashAt = result.crash || crashAt;
         shown = result.cashed || result.crash || shown;
         paint(root, ctx);
     });
     paint(root, ctx);
-    return () => {
-        window.clearInterval(timer);
+    return async () => {
         stop();
+        const shouldCash = live;
+        live = false;
+        stopRound();
+        if (shouldCash) await ctx.play('crash_cashout');
     };
 }
 
@@ -48,17 +58,19 @@ function paint(root, ctx) {
             crashAt = result.crash || 0;
             const started = performance.now();
             const growth = result.growth || 0.065;
-            window.clearInterval(timer);
+            stopRound();
             paint(root, ctx);
+            const myTick = tick;
             timer = window.setInterval(async () => {
+                if (myTick !== tick) return;
                 const elapsed = (performance.now() - started) / 1000;
                 shown = Math.round(Math.exp(growth * elapsed) * 100) / 100;
                 if (crashAt && shown >= crashAt) {
-                    window.clearInterval(timer);
+                    stopRound();
                     live = false;
                     shown = crashAt;
                     await ctx.play('crash_bust');
-                    paint(root, ctx);
+                    if (myTick === tick) paint(root, ctx);
                     return;
                 }
                 if (shown >= max) shown = max;
@@ -73,7 +85,7 @@ function paint(root, ctx) {
             return;
         }
 
-        window.clearInterval(timer);
+        stopRound();
         const result = await ctx.play('crash_cashout');
         live = false;
         if (result.ok) {

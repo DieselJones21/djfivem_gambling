@@ -81,17 +81,22 @@ function syncChrome() {
     });
 }
 
+let viewLock = Promise.resolve();
+
 function renderView() {
-    const view = document.getElementById('view');
-    if (destroyView) {
-        destroyView();
-        destroyView = null;
-    }
-    const render = views[state.view];
-    if (render) {
-        destroyView = render(view, ctx) || null;
-    }
-    syncChrome();
+    viewLock = viewLock.then(async () => {
+        const view = document.getElementById('view');
+        if (destroyView) {
+            await destroyView();
+            destroyView = null;
+        }
+        const render = views[state.view];
+        if (render) {
+            destroyView = render(view, ctx) || null;
+        }
+        syncChrome();
+    }).catch(() => {});
+    return viewLock;
 }
 
 function applyResult(result) {
@@ -111,15 +116,25 @@ function applyResult(result) {
     return result;
 }
 
+const FOLLOW_UP = new Set([
+    'blackjack_act',
+    'crash_cashout',
+    'crash_bust',
+    'mines_reveal',
+    'mines_cashout',
+    'poker_draw'
+]);
+
 async function play(action, data) {
-    if (state.busy) return { ok: false, error: 'Wait for the current action' };
-    state.busy = true;
+    const followUp = FOLLOW_UP.has(action);
+    if (state.busy && !followUp) return { ok: false, error: 'Wait for the current action' };
+    if (!followUp) state.busy = true;
     document.getElementById('statusLine').textContent = 'Settling…';
     try {
         const result = preview ? previewPlay(action, data, state) : await post('play', { action, data });
         return applyResult(result || { ok: false, error: 'No response' });
     } finally {
-        state.busy = false;
+        if (!followUp) state.busy = false;
         syncChrome();
     }
 }
