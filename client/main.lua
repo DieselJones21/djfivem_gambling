@@ -107,7 +107,7 @@ end)
 
 RegisterNetEvent('djfivem_gambling:client:notify', function(message)
     BeginTextCommandThefeedPost('STRING')
-    AddTextComponentSubstringPlayerName(message or 'The 305')
+    AddTextComponentSubstringPlayerName(message or 'Envy Roleplay')
     EndTextCommandThefeedPostTicker(false, true)
 end)
 

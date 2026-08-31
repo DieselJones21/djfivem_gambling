@@ -163,7 +163,7 @@ local function canPlay(source, action)
         return nil, 'Tablet is closed'
     end
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        return nil, 'You need a 305 tablet.'
+        return nil, 'You need an Envy tablet.'
     end
     if not RATE_FREE[action] then
         local now = GetGameTimer()
@@ -190,7 +190,7 @@ end)
 
 local function openFor(source)
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need a 305 tablet.')
+        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need an Envy tablet.')
         return
     end
 
