@@ -163,7 +163,7 @@ local function canPlay(source, action)
         return nil, 'Tablet is closed'
     end
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        return nil, 'You need a House Tablet.'
+        return nil, 'You need a 305 tablet.'
     end
     if not RATE_FREE[action] then
         local now = GetGameTimer()
@@ -190,7 +190,7 @@ end)
 
 local function openFor(source)
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need a House Tablet.')
+        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need a 305 tablet.')
         return
     end
 
@@ -243,6 +243,9 @@ function actions.blackjack_act(source, data)
     local session = sessions[source]
     if not session or session.kind ~= 'blackjack' then
         return fail('No blackjack round is open')
+    end
+    if not session.player[session.active] then
+        return fail('Invalid hand')
     end
 
     local extraBet = 0
@@ -516,29 +519,32 @@ function actions.coinflip(source, data)
     return settle(source, 'coinflip', bet, result.payout, { result = result })
 end
 
-RegisterNetEvent('djfivem_gambling:server:play', function(action, data)
+RegisterNetEvent('djfivem_gambling:server:play', function(action, data, requestId)
     local source = source
+    if type(data) ~= 'table' then
+        data = {}
+    end
     if type(action) ~= 'string' or not ALLOWED[action] then
-        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'))
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'), requestId)
         return
     end
     local allowed, err = canPlay(source, action)
     if not allowed then
-        TriggerClientEvent('djfivem_gambling:client:result', source, fail(err))
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail(err), requestId)
         return
     end
     local handler = actions[action]
     if not handler then
-        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'))
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Unknown action'), requestId)
         return
     end
 
-    local ok, result = pcall(handler, source, data or {})
+    local ok, result = pcall(handler, source, data)
     if not ok then
-        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Round failed'))
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Round failed'), requestId)
         return
     end
-    TriggerClientEvent('djfivem_gambling:client:result', source, result)
+    TriggerClientEvent('djfivem_gambling:client:result', source, result, requestId)
 end)
 
 AddEventHandler('playerDropped', function()

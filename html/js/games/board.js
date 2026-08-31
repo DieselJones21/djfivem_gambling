@@ -24,7 +24,7 @@ export function render(root, ctx) {
         const board = ctx.state.leaderboard || { won: [], lost: [], mine: {} };
         const mine = board.mine || {};
         root.innerHTML = `
-            ${head('House board', 'Lifetime profit and losses across every tablet. Rankings persist on the server.')}
+            ${head('305 board', 'Lifetime profit and losses across every 305 tablet. Rankings persist on the server.')}
             <div class="board-grid">
                 ${column('Most money won', board.won || [], 'No winners yet.', ctx)}
                 ${column('Most money lost', board.lost || [], 'No losses recorded yet.', ctx)}

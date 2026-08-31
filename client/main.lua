@@ -1,5 +1,6 @@
 local open = false
-local pending = nil
+local pending = {}
+local nextRequest = 0
 
 local function send(action, data)
     data = data or {}
@@ -17,7 +18,7 @@ local function closeTablet()
         return
     end
     open = false
-    pending = nil
+    pending = {}
     setFocus(false)
     send('close')
     TriggerServerEvent('djfivem_gambling:server:close')
@@ -34,27 +35,29 @@ RegisterNetEvent('djfivem_gambling:client:open', function(payload)
     openTablet(payload)
 end)
 
-RegisterNetEvent('djfivem_gambling:client:result', function(result)
-    local resolve = pending
-    pending = nil
-    if resolve then
+RegisterNetEvent('djfivem_gambling:client:result', function(result, requestId)
+    if requestId and pending[requestId] then
+        local resolve = pending[requestId]
+        pending[requestId] = nil
         resolve(result)
-    else
-        send('result', { result = result })
+        return
     end
+    send('result', { result = result })
 end)
 
 local function request(action, data)
+    nextRequest = nextRequest + 1
+    local id = nextRequest
     local p = promise.new()
-    pending = function(result)
+    pending[id] = function(result)
         p:resolve(result)
     end
-    TriggerServerEvent('djfivem_gambling:server:play', action, data or {})
+    TriggerServerEvent('djfivem_gambling:server:play', action, data or {}, id)
 
     SetTimeout(8000, function()
-        if pending then
-            pending({ ok = false, error = 'Request timed out' })
-            pending = nil
+        if pending[id] then
+            pending[id]({ ok = false, error = 'Request timed out' })
+            pending[id] = nil
         end
     end)
 
@@ -104,7 +107,7 @@ end)
 
 RegisterNetEvent('djfivem_gambling:client:notify', function(message)
     BeginTextCommandThefeedPost('STRING')
-    AddTextComponentSubstringPlayerName(message or 'House Tablet')
+    AddTextComponentSubstringPlayerName(message or 'The 305')
     EndTextCommandThefeedPostTicker(false, true)
 end)
 

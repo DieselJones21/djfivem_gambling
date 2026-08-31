@@ -484,6 +484,7 @@ function Games.crashPoint()
 end
 
 function Games.diceRoll(bet, target, chance)
+    local payoutOdd
     chance, payoutOdd = Odds.dicePayout(chance)
     local roll = math.random(1, 100)
     local won

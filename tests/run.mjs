@@ -125,6 +125,7 @@ assert(!tooBig.ok, 'rejects bets over 100k');
 
 const rtp = wheelRtp(defaultConfig.wheel.segments);
 assert(rtp < 1, `wheel RTP must be house-sided, got ${rtp}`);
+assert(defaultConfig.wheel.segments.every((segment) => Number.isFinite(segment.weight)), 'preview engine keeps wheel weights');
 assert(defaultConfig.coinflip.winChance < 50, 'coin flip must be worse than even');
 assert(defaultConfig.bets.max === 100000, 'max bet is 100k');
 
