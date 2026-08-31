@@ -30,7 +30,7 @@ export function render(root, ctx) {
     `).join('') || '<li class="empty">No hands yet. Open a table to start the session tape.</li>';
 
     root.innerHTML = `
-        ${head('Statistics overview', 'Live 305 session tape across every table on this tablet.', `
+        ${head('Statistics overview', 'Live Envy session tape across every table on this tablet.', `
             <div class="toggles">
                 <button class="toggle ${mode === 'money' ? 'on' : ''}" data-mode="money" type="button">Money</button>
                 <button class="toggle ${mode === 'games' ? 'on' : ''}" data-mode="games" type="button">Games</button>
@@ -49,18 +49,18 @@ export function render(root, ctx) {
                         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
                             <defs>
                                 <linearGradient id="tape" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stop-color="#ff2d95"/>
-                                    <stop offset="100%" stop-color="#3ee8ff"/>
+                                    <stop offset="0%" stop-color="#32a070"/>
+                                    <stop offset="100%" stop-color="#3dff9a"/>
                                 </linearGradient>
                                 <linearGradient id="tapeFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#ff2d95" stop-opacity="0.3"/>
-                                    <stop offset="100%" stop-color="#3ee8ff" stop-opacity="0"/>
+                                    <stop offset="0%" stop-color="#32a070" stop-opacity="0.3"/>
+                                    <stop offset="100%" stop-color="#3dff9a" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
                             <line x1="0" y1="${height - 8}" x2="${width}" y2="${height - 8}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
                             <polygon fill="url(#tapeFill)" points="${area}"/>
                             <polyline fill="none" stroke="url(#tape)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" points="${points}"/>
-                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#ff2d95" stroke-width="2"/>`).join('')}
+                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#32a070" stroke-width="2"/>`).join('')}
                         </svg>
                         <div class="chart-x">${(labels.length ? labels : ['—']).map((label) => `<span>${label}</span>`).join('')}</div>
                     </div>

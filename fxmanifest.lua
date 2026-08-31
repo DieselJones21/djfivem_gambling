@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'djfivem_gambling'
 author 'DieselJones'
-description 'The 305 Miami gambling tablet with configurable odds and payouts'
+description 'Envy Roleplay gambling tablet with configurable odds and payouts'
 version '1.1.0'
 
 ui_page 'html/index.html'
@@ -28,7 +28,7 @@ server_scripts {
 files {
     'html/index.html',
     'html/css/tablet.css',
-    'html/img/the-305.png',
+    'html/img/envy-mark.png',
     'html/js/*.js',
     'html/js/games/*.js'
 }

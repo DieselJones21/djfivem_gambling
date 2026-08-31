@@ -1,6 +1,6 @@
 # djfivem_gambling
 
-A FiveM gambling tablet themed to **The 305** — Miami black, hot pink, chrome, and ice-cyan. Every popular table is included, and every payout lives in `config.lua` so you can tune the house without touching game code.
+A FiveM gambling tablet themed to **Envy Roleplay** — forest black, neon emerald `#32a070`, mint `#57b59e`, glow `#3dff9a`, and chrome. Every popular table is included, and every payout lives in `config.lua` so you can tune the house without touching game code.
 
 ## Tables
 
@@ -35,12 +35,12 @@ Paste this into `ox_inventory/data/items.lua`:
 
 ```lua
 ['gambling_tablet'] = {
-    label = '305 Tablet',
+    label = 'Envy Tablet',
     weight = 380,
     stack = false,
     close = true,
     consume = 0,
-    description = 'The 305 Miami gambling tablet. Use it to open the house games.',
+    description = 'The Envy Roleplay gambling tablet. Use it to open the house games.',
     client = {
         export = 'djfivem_gambling.useTablet',
         image = 'gambling_tablet.png',
