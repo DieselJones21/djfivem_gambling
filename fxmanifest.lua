@@ -4,8 +4,8 @@ lua54 'yes'
 
 name 'djfivem_gambling'
 author 'DieselJones'
-description 'Premium black/red/white gambling tablet with configurable odds and payouts'
-version '1.0.0'
+description 'The 305 Miami gambling tablet with configurable odds and payouts'
+version '1.1.0'
 
 ui_page 'html/index.html'
 
@@ -28,6 +28,7 @@ server_scripts {
 files {
     'html/index.html',
     'html/css/tablet.css',
+    'html/img/the-305.png',
     'html/js/*.js',
     'html/js/games/*.js'
 }

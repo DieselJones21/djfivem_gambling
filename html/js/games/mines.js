@@ -26,7 +26,7 @@ function paint(root, ctx) {
             ${rail(ctx, board && !board.done
                 ? '<button class="cta" data-play="cash">Cash out</button>'
                 : `
-                    <input id="mines" type="range" min="${ctx.state.config.mines.minMines}" max="${ctx.state.config.mines.maxMines}" value="${mines}" style="width:120px;accent-color:#e31c3d">
+                    <input id="mines" type="range" min="${ctx.state.config.mines.minMines}" max="${ctx.state.config.mines.maxMines}" value="${mines}" style="width:120px;accent-color:#ff2d95">
                     <button class="cta red" data-play="start">Start</button>
                 `)}
         </div>

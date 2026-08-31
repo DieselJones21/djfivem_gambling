@@ -1,6 +1,6 @@
 # djfivem_gambling
 
-A FiveM gambling tablet with a black / red / white dashboard UI. Every popular table is included, and every payout lives in `config.lua` so you can tune the house without touching game code.
+A FiveM gambling tablet themed to **The 305** — Miami black, hot pink, chrome, and ice-cyan. Every popular table is included, and every payout lives in `config.lua` so you can tune the house without touching game code.
 
 ## Tables
 
@@ -35,12 +35,12 @@ Paste this into `ox_inventory/data/items.lua`:
 
 ```lua
 ['gambling_tablet'] = {
-    label = 'House Tablet',
+    label = '305 Tablet',
     weight = 380,
     stack = false,
     close = true,
     consume = 0,
-    description = 'A black casino tablet. Use it to open the house games.',
+    description = 'The 305 Miami gambling tablet. Use it to open the house games.',
     client = {
         export = 'djfivem_gambling.useTablet',
         image = 'gambling_tablet.png',

@@ -5,7 +5,7 @@ export function render(root, ctx) {
     const cfg = ctx.state.config;
     const dice = dicePayout(cfg, 50);
     const mine = minesMultiplier(cfg, cfg.mines.defaultMines, 3);
-    const wheel = cfg.wheel.segments.map((segment) => `${segment.label} w${segment.weight}`).join(' · ');
+    const wheel = cfg.wheel.segments.map((segment) => `${segment.label} ${segment.payout}x`).join(' · ');
 
     root.innerHTML = `
         ${head('Odds & payouts', 'These values are the live public config. Edit config.lua and restart the resource to change the house.')}
@@ -52,7 +52,7 @@ export function render(root, ctx) {
                 <h3>Baccarat / wheel / mines</h3>
                 <dl>
                     <dt>Player / banker / tie</dt><dd>${cfg.baccarat.playerPayout} / ${cfg.baccarat.bankerPayout} / ${cfg.baccarat.tiePayout}</dd>
-                    <dt>Wheel weights</dt><dd>${wheel}</dd>
+                    <dt>Wheel pays</dt><dd>${wheel}</dd>
                     <dt>Mines default</dt><dd>${cfg.mines.defaultMines} mines</dd>
                     <dt>3 gems sample</dt><dd>${mine.toFixed(2)}x</dd>
                 </dl>

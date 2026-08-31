@@ -74,8 +74,8 @@ function syncChrome() {
     document.getElementById('statWinChip').textContent = `+${Math.floor(state.stats.lastWin || 0)}`;
     document.getElementById('closeBtn').textContent = `${state.config.closeKey || 'RSHIFT'} (Close)`;
     document.getElementById('statusLine').textContent = preview
-        ? 'House Tablet · preview'
-        : 'House Tablet';
+        ? 'The 305 · Miami preview'
+        : 'The 305 · Miami';
     document.querySelectorAll('#nav button').forEach((button) => {
         button.classList.toggle('active', button.dataset.view === state.view);
     });
@@ -204,7 +204,7 @@ window.addEventListener('keydown', (event) => {
 
 if (preview) {
     document.body.classList.add('preview');
-    state.player = { name: 'MoodyNewt8638', role: 'Admin' };
+    state.player = { name: 'ViceNight', role: '305' };
     state.balance = 3510;
     state.stats = {
         wagered: 8420,

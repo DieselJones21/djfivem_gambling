@@ -40,7 +40,19 @@ function Odds.publicConfig()
         },
         dice = copy(Config.Dice),
         baccarat = copy(Config.Baccarat),
-        wheel = copy(Config.Wheel),
+        wheel = {
+            segments = (function()
+                local segments = {}
+                for i, segment in ipairs(Config.Wheel.segments) do
+                    segments[i] = {
+                        label = segment.label,
+                        payout = segment.payout,
+                        tone = segment.tone
+                    }
+                end
+                return segments
+            end)()
+        },
         mines = copy(Config.Mines),
         coinflip = copy(Config.Coinflip)
     }
