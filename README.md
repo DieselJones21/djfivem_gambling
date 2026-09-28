@@ -1,6 +1,6 @@
 # djfivem_gambling
 
-A FiveM gambling tablet themed to **City of Dreams** — the same glass shell language as fishing, hunting, and trucking, with the house neon palette from the logo (magenta `#ff2bd6`, cyan `#00e5f0`, violet `#9b4dff`). Players convert **memecoin** crypto into chips, then wager those chips on every table. All payouts live in `config.lua`.
+A FiveM gambling tablet themed to **City of Dreams** — a mainly black glass shell with white chrome and the house logo as the only real color. Players convert **memecoin** crypto into chips, then wager those chips on every table. All payouts live in `config.lua`.
 
 ## Tables
 

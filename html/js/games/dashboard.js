@@ -95,18 +95,18 @@ export function render(root, ctx) {
                         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
                             <defs>
                                 <linearGradient id="tape" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stop-color="#00e5f0"/>
-                                    <stop offset="100%" stop-color="#ff2bd6"/>
+                                    <stop offset="0%" stop-color="#8a8a8a"/>
+                                    <stop offset="100%" stop-color="#ffffff"/>
                                 </linearGradient>
                                 <linearGradient id="tapeFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#ff2bd6" stop-opacity="0.32"/>
-                                    <stop offset="100%" stop-color="#00e5f0" stop-opacity="0"/>
+                                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+                                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
                             <line x1="0" y1="${height - 8}" x2="${width}" y2="${height - 8}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
                             <polygon fill="url(#tapeFill)" points="${area}"/>
                             <polyline fill="none" stroke="url(#tape)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" points="${points}"/>
-                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#ff2bd6" stroke-width="2"/>`).join('')}
+                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#111" stroke-width="2"/>`).join('')}
                         </svg>
                         <div class="chart-x">${(labels.length ? labels : ['—']).map((label) => `<span>${label}</span>`).join('')}</div>
                     </div>

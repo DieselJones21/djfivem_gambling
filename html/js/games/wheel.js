@@ -4,10 +4,10 @@ let last = null;
 let angle = 0;
 
 const TONES = {
-    red: '#ff2bd6',
-    white: '#00e5f0',
-    mute: '#9b4dff',
-    dead: '#12081c'
+    red: '#ffffff',
+    white: '#9a9a9a',
+    mute: '#3a3a3a',
+    dead: '#111111'
 };
 
 export function render(root, ctx) {
@@ -22,7 +22,7 @@ function paint(root, ctx) {
         return `${color} ${index * slice}deg ${(index + 1) * slice}deg`;
     }).join(', ');
     const labels = segments.map((segment, index) => {
-        const ink = segment.tone === 'white' ? '#111' : '#fff';
+        const ink = segment.tone === 'dead' || segment.tone === 'mute' ? '#fff' : '#111';
         return `<b style="transform: rotate(${index * slice + slice / 2}deg) translateY(-88px); color:${ink}">${segment.label}</b>`;
     }).join('');
 
