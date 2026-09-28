@@ -1,6 +1,51 @@
 import { head } from './ui.js';
 
 let mode = 'money';
+let amount = 100;
+
+function coinLabel(ctx) {
+    return ctx.state.config.memecoin?.label || 'Memecoin';
+}
+
+function cashier(ctx) {
+    const cfg = ctx.state.config.memecoin || { enabled: true, rate: 1, presets: [10, 50, 100, 500, 1000], allowCashout: true };
+    if (cfg.enabled === false) return '';
+    const presets = (cfg.presets || []).map((value) => (
+        `<button type="button" data-coin="${value}" class="${amount === value ? 'on' : ''}">${value.toLocaleString('en-US')}</button>`
+    )).join('');
+    const rate = cfg.rate || 1;
+    const chipsOut = amount * rate;
+
+    return `
+        <div class="cashier">
+            <div class="wallets">
+                <article class="wallet">
+                    <span>${coinLabel(ctx)}</span>
+                    <strong>${Math.floor(ctx.state.memecoin || 0).toLocaleString('en-US')}</strong>
+                    <em>crypto on hand</em>
+                </article>
+                <article class="wallet">
+                    <span>House chips</span>
+                    <strong>${ctx.money(ctx.state.balance)}</strong>
+                    <em>${rate} chip${rate === 1 ? '' : 's'} per ${coinLabel(ctx).toLowerCase()}</em>
+                </article>
+            </div>
+            <div class="panel convert">
+                <div class="convert-head">
+                    <h3>Memecoin cashier</h3>
+                    <p>Convert crypto into chips to play every table on this tablet.</p>
+                </div>
+                <div class="presets">${presets}</div>
+                <div class="convert-row">
+                    <input id="convertAmount" type="number" min="${cfg.minConvert || 1}" max="${cfg.maxConvert || 50000}" value="${amount}" step="1">
+                    <span>${amount} ${coinLabel(ctx)} → ${ctx.money(chipsOut)}</span>
+                    <button class="cta" data-convert="buy" type="button">Buy chips</button>
+                    ${cfg.allowCashout === false ? '' : `<button class="ghost" data-convert="cashout" type="button">Cash out ${ctx.money(chipsOut)}</button>`}
+                </div>
+            </div>
+        </div>
+    `;
+}
 
 export function render(root, ctx) {
     const history = ctx.state.stats.history || [];
@@ -27,16 +72,17 @@ export function render(root, ctx) {
             <b class="${item.profit >= 0 ? 'up' : 'down'}">${item.profit >= 0 ? '+' : ''}${ctx.money(item.profit)}</b>
             <em>${ctx.money(item.bet || 0)}</em>
         </li>
-    `).join('') || '<li class="empty">No hands yet. Open a table to start the session tape.</li>';
+    `).join('') || '<li class="empty">No hands yet. Convert memecoin, then open a table.</li>';
 
     root.innerHTML = `
-        ${head('Statistics overview', 'Live Envy session tape across every table on this tablet.', `
+        ${head('Statistics overview', 'Live City of Dreams session tape. Convert memecoin into chips, then grind the house.', `
             <div class="toggles">
                 <button class="toggle ${mode === 'money' ? 'on' : ''}" data-mode="money" type="button">Money</button>
                 <button class="toggle ${mode === 'games' ? 'on' : ''}" data-mode="games" type="button">Games</button>
                 <button class="toggle ${mode === 'wins' ? 'on' : ''}" data-mode="wins" type="button">Wins</button>
             </div>
         `)}
+        ${cashier(ctx)}
         <div class="dash">
             <div class="panel">
                 <div class="chart">
@@ -49,18 +95,18 @@ export function render(root, ctx) {
                         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
                             <defs>
                                 <linearGradient id="tape" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stop-color="#32a070"/>
-                                    <stop offset="100%" stop-color="#3dff9a"/>
+                                    <stop offset="0%" stop-color="#8a8a8a"/>
+                                    <stop offset="100%" stop-color="#ffffff"/>
                                 </linearGradient>
                                 <linearGradient id="tapeFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#32a070" stop-opacity="0.3"/>
-                                    <stop offset="100%" stop-color="#3dff9a" stop-opacity="0"/>
+                                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+                                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
                             <line x1="0" y1="${height - 8}" x2="${width}" y2="${height - 8}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
                             <polygon fill="url(#tapeFill)" points="${area}"/>
                             <polyline fill="none" stroke="url(#tape)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" points="${points}"/>
-                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#32a070" stroke-width="2"/>`).join('')}
+                            ${pointList.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff" stroke="#111" stroke-width="2"/>`).join('')}
                         </svg>
                         <div class="chart-x">${(labels.length ? labels : ['—']).map((label) => `<span>${label}</span>`).join('')}</div>
                     </div>
@@ -81,6 +127,34 @@ export function render(root, ctx) {
         button.addEventListener('click', () => {
             mode = button.dataset.mode;
             render(root, ctx);
+        });
+    });
+
+    const input = root.querySelector('#convertAmount');
+    if (input) {
+        input.addEventListener('input', (event) => {
+            amount = Math.max(1, Math.floor(Number(event.target.value) || 0));
+            const label = root.querySelector('.convert-row span');
+            const rate = ctx.state.config.memecoin?.rate || 1;
+            if (label) label.textContent = `${amount} ${coinLabel(ctx)} → ${ctx.money(amount * rate)}`;
+        });
+    }
+    root.querySelectorAll('[data-coin]').forEach((button) => {
+        button.addEventListener('click', () => {
+            amount = Number(button.dataset.coin);
+            render(root, ctx);
+        });
+    });
+    root.querySelectorAll('[data-convert]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const live = Number(root.querySelector('#convertAmount')?.value || amount);
+            amount = Math.max(1, Math.floor(live));
+            const direction = button.dataset.convert;
+            const payload = direction === 'cashout'
+                ? amount * (ctx.state.config.memecoin?.rate || 1)
+                : amount;
+            const result = await ctx.convert(direction, payload);
+            if (result && result.ok) render(root, ctx);
         });
     });
 }

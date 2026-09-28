@@ -1,12 +1,12 @@
 # djfivem_gambling
 
-A FiveM gambling tablet themed to **Envy Roleplay** — forest black, neon emerald `#32a070`, mint `#57b59e`, glow `#3dff9a`, and chrome. Every popular table is included, and every payout lives in `config.lua` so you can tune the house without touching game code.
+A FiveM gambling tablet themed to **City of Dreams** — a mainly black glass shell with white chrome and the house logo as the only real color. Players convert **memecoin** crypto into chips, then wager those chips on every table. All payouts live in `config.lua`.
 
 ## Tables
 
-- Blackjack (hit, stand, double, split, configurable 3:2 or 6:5)
+- Blackjack (hit, stand, double, split, even-money blackjack)
 - European or American roulette
-- Five-reel, five-line slots
+- Five-reel, three-line slots
 - Jacks or Better video poker
 - Crash
 - Dice (over / under with live odds)
@@ -15,17 +15,17 @@ A FiveM gambling tablet themed to **Envy Roleplay** — forest black, neon emera
 - Mines
 - Coin flip
 
-The **Board** tab ranks lifetime money won and money lost. The **Odds** tab shows the live public paytables.
+The **Dashboard** cashier converts memecoin into house chips (and back). The **Board** tab ranks lifetime chips won and lost. The **Odds** tab shows the live public paytables.
 
 ## Install
 
 1. Drop the resource into `resources/[standalone]/djfivem_gambling`
 2. Add `ensure djfivem_gambling` after `ox_inventory` in `server.cfg`
 3. Set `Config.Framework` in `config.lua` to `standalone`, `qb`, `qbx`, or `esx`
-4. Add the `gambling_tablet` item to ox_inventory (below)
-5. Restart and use the item — or `/gambling` if you already have one
+4. Add the `gambling_tablet` and `memecoin` items to ox_inventory (below)
+5. Restart and use the tablet — or `/gambling` if you already have one
 
-Standalone mode keeps a per-license chip balance starting at `Config.StartingBalance`. QB / QBX / ESX debit and credit `Config.Account`.
+Wagers settle in **chips**, not cash. Players buy chips from the cashier with the `memecoin` item (or a money account if you set `Config.Memecoin.account`). Chip balances persist in `data/chips.json`. Standalone mode seeds `Config.StartingMemecoin` the first time a player opens the tablet.
 
 ## Open it with ox_inventory
 
@@ -35,29 +35,36 @@ Paste this into `ox_inventory/data/items.lua`:
 
 ```lua
 ['gambling_tablet'] = {
-    label = 'Envy Tablet',
+    label = 'Dreams Tablet',
     weight = 380,
     stack = false,
     close = true,
     consume = 0,
-    description = 'The Envy Roleplay gambling tablet. Use it to open the house games.',
+    description = 'City of Dreams house tablet. Convert memecoin into chips and play the tables.',
     client = {
         export = 'djfivem_gambling.useTablet',
         image = 'gambling_tablet.png',
         usetime = 250
     }
 },
+
+['memecoin'] = {
+    label = 'Memecoin',
+    weight = 0,
+    stack = true,
+    close = false,
+    description = 'City of Dreams crypto. Convert it on the gambling tablet into chips.',
+},
 ```
 
-Copy `install/ox_inventory/gambling_tablet.png` into `ox_inventory/web/images/`.
+Copy `html/img/logo-mark.png` into `ox_inventory/web/images/gambling_tablet.png` (and optionally `memecoin.png`).
 
 Give one with:
 
 ```
 /giveitem [id] gambling_tablet 1
+/giveitem [id] memecoin 1000
 ```
-
-or the ox_inventory admin give command.
 
 | Method | How |
 | --- | --- |
@@ -68,6 +75,20 @@ or the ox_inventory admin give command.
 Right Shift (or Escape) closes the tablet.
 
 Set `Config.RequireItem = false` if you want the command to work without the item.
+
+## Memecoin cashier
+
+The dashboard cashier is the only way onto the felt.
+
+| Setting | What it does |
+| --- | --- |
+| `Config.Memecoin.enabled` | Chip wallet + cashier. Set `false` to fall back to cash/`Config.Account` |
+| `Config.Memecoin.item` | Inventory item taken and returned (`memecoin`) |
+| `Config.Memecoin.account` | Optional money account instead of an item (e.g. `'crypto'`) |
+| `Config.Memecoin.rate` | Chips granted per 1 memecoin |
+| `Config.Memecoin.allowCashout` | Let players convert chips back to memecoin |
+
+Buy chips: cashier takes memecoin and credits `amount * rate` chips. Cash out: cashier takes chips in multiples of `rate` and returns memecoin.
 
 ## Leaderboard
 
@@ -82,9 +103,11 @@ Ranks persist in `data/leaderboard.json` and survive resource restarts. Tune `Co
 
 Edit `config.lua` and restart the resource. The NUI does not invent numbers — it renders whatever `Odds.publicConfig()` sends.
 
+House numbers in this build are tighter than the previous tablet (people were winning too much) and **every bet preset is half** of the old ladder.
+
 | Block | What it changes |
 | --- | --- |
-| `Config.Bets` | Table min / max and chip presets |
+| `Config.Bets` | Table min / max and chip presets (now 5 → 50,000) |
 | `Config.Blackjack` | Blackjack payout, soft 17, double / split |
 | `Config.Roulette` | European vs American, plus every even-money and inside payout |
 | `Config.Slots.symbols` | Symbol weights and 3 / 4 / 5-kind payouts |
@@ -108,18 +131,19 @@ The NUI is static files. From `html/`:
 python3 -m http.server 4173
 ```
 
-Open `http://127.0.0.1:4173`. Outside FiveM it runs a local engine with the same paytables so you can click through every table.
+Open `http://127.0.0.1:4173`. Outside FiveM it runs a local engine with the same paytables so you can click through every table, including the memecoin cashier.
 
 ## Layout
 
 ```
-config.lua            house numbers
+config.lua            house numbers + memecoin cashier
 shared/odds.lua       public config + shared math
-client/main.lua       NUI focus, item export
-server/framework.lua  QB / QBX / ESX / standalone money
+client/main.lua       NUI focus, item export, convert callback
+server/framework.lua  QB / QBX / ESX / standalone money + items
+server/chips.lua      persistent chip wallet + memecoin conversion
 server/leaderboard.lua  persistent won / lost ranks
 server/games.lua      table logic
-server/main.lua       sessions and settlement
-install/ox_inventory  item snippet + icon
-html/                 tablet UI
+server/main.lua       sessions, settlement, cashier
+install/ox_inventory  item snippet
+html/                 tablet UI + City of Dreams logo
 ```

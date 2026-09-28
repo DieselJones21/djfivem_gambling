@@ -25,6 +25,15 @@ function Odds.publicConfig()
     return {
         currency = copy(Config.Currency),
         bets = copy(Config.Bets),
+        memecoin = {
+            enabled = not (Config.Memecoin and Config.Memecoin.enabled == false),
+            label = (Config.Memecoin and Config.Memecoin.label) or 'Memecoin',
+            rate = (Config.Memecoin and Config.Memecoin.rate) or 1,
+            minConvert = (Config.Memecoin and Config.Memecoin.minConvert) or 1,
+            maxConvert = (Config.Memecoin and Config.Memecoin.maxConvert) or 50000,
+            presets = copy((Config.Memecoin and Config.Memecoin.presets) or { 10, 50, 100, 500, 1000 }),
+            allowCashout = not (Config.Memecoin and Config.Memecoin.allowCashout == false)
+        },
         closeKey = Config.CloseKeyLabel,
         blackjack = copy(Config.Blackjack),
         roulette = copy(Config.Roulette),

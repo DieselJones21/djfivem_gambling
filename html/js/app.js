@@ -1,5 +1,5 @@
 import { defaultConfig } from './defaults.js';
-import { play as previewPlay } from './engine.js';
+import { play as previewPlay, convert as previewConvert } from './engine.js';
 import { views } from './games/index.js';
 import { seedPreviewBoard } from './leaderboard.js';
 import { post, preview } from './nui.js';
@@ -29,7 +29,8 @@ const state = {
     stats: { wagered: 0, won: 0, lost: 0, lastWin: 0, history: [] },
     config: defaultConfig,
     leaderboard: seedPreviewBoard('Player'),
-    bet: 100,
+    bet: 50,
+    memecoin: 2500,
     busy: false
 };
 
@@ -67,15 +68,22 @@ function syncChrome() {
     document.getElementById('playerName').textContent = state.player.name;
     document.getElementById('playerRole').textContent = state.player.role;
     const avatar = document.getElementById('playerAvatar');
-    if (avatar) avatar.textContent = (state.player.name || 'H').trim().charAt(0).toUpperCase();
+    if (avatar) avatar.textContent = (state.player.name || 'C').trim().charAt(0).toUpperCase();
     document.getElementById('statBalance').textContent = money(state.balance);
     document.getElementById('statWin').textContent = money(state.stats.lastWin || 0);
     document.getElementById('statWagered').textContent = money(state.stats.wagered || 0);
     document.getElementById('statWinChip').textContent = `+${Math.floor(state.stats.lastWin || 0)}`;
+    const coinChip = document.getElementById('statBalanceChip');
+    if (coinChip) {
+        const label = state.config.memecoin?.label || 'Memecoin';
+        coinChip.textContent = state.config.memecoin?.enabled === false
+            ? 'CHIPS'
+            : `${Math.floor(state.memecoin || 0).toLocaleString('en-US')} ${label}`;
+    }
     document.getElementById('closeBtn').textContent = `${state.config.closeKey || 'RSHIFT'} (Close)`;
     document.getElementById('statusLine').textContent = preview
-        ? 'Envy Roleplay · house preview'
-        : 'Envy Roleplay · house';
+        ? 'CITY OF DREAMS · house preview'
+        : 'CITY OF DREAMS · house';
     document.querySelectorAll('#nav button').forEach((button) => {
         button.classList.toggle('active', button.dataset.view === state.view);
     });
@@ -107,9 +115,14 @@ function applyResult(result) {
         return result;
     }
     if (typeof result.balance === 'number') state.balance = result.balance;
+    if (typeof result.memecoin === 'number') state.memecoin = result.memecoin;
     if (result.stats) state.stats = result.stats;
     if (result.leaderboard) state.leaderboard = result.leaderboard;
-    if (result.profit > 0) toast(`Won ${money(result.profit)}`);
+    if (result.converted) {
+        toast(result.direction === 'cashout'
+            ? `Cashed out ${money(result.credited)} to memecoin`
+            : `Converted ${result.amount} memecoin into ${money(result.credited)}`);
+    } else if (result.profit > 0) toast(`Won ${money(result.profit)}`);
     else if (result.payout === 0 && result.bet) toast('House took the bet');
     resultListeners.forEach((listener) => listener(result));
     syncChrome();
@@ -139,11 +152,27 @@ async function play(action, data) {
     }
 }
 
+async function convert(direction, amount) {
+    if (state.busy) return { ok: false, error: 'Wait for the current action' };
+    state.busy = true;
+    document.getElementById('statusLine').textContent = 'Cashier…';
+    try {
+        const result = preview
+            ? previewConvert({ direction, amount }, state)
+            : await post('convert', { direction, amount });
+        return applyResult(result || { ok: false, error: 'No response' });
+    } finally {
+        state.busy = false;
+        syncChrome();
+    }
+}
+
 const ctx = {
     state,
     money,
     toast,
     play,
+    convert,
     setBet,
     onResult(listener) {
         resultListeners.add(listener);
@@ -171,6 +200,7 @@ function openTablet(payload = {}) {
     if (payload.player) state.player = payload.player;
     if (payload.config) state.config = payload.config;
     if (typeof payload.balance === 'number') state.balance = payload.balance;
+    if (typeof payload.memecoin === 'number') state.memecoin = payload.memecoin;
     if (payload.stats) {
         state.stats = {
             wagered: payload.stats.wagered || 0,
@@ -204,8 +234,9 @@ window.addEventListener('keydown', (event) => {
 
 if (preview) {
     document.body.classList.add('preview');
-    state.player = { name: 'Nightshade', role: 'Envy' };
-    state.balance = 3510;
+    state.player = { name: 'Nightshade', role: 'Dreams' };
+    state.balance = 500;
+    state.memecoin = 2500;
     state.stats = {
         wagered: 8420,
         won: 3910,

@@ -134,7 +134,18 @@ function Framework.addMoney(source, amount)
     standalone[key] = Framework.getBalance(source) + amount
 end
 
-function Framework.hasItem(source, item)
+function Framework.hasInventory()
+    if GetResourceState('ox_inventory') == 'started' then
+        return true
+    end
+    return Framework.name == 'qb' or Framework.name == 'qbx' or Framework.name == 'esx'
+end
+
+function Framework.getItemCount(source, item)
+    if not item then
+        return 0
+    end
+
     if GetResourceState('ox_inventory') == 'started' then
         local count
         if exports.ox_inventory.GetItemCount then
@@ -142,20 +153,176 @@ function Framework.hasItem(source, item)
         else
             count = exports.ox_inventory:Search(source, 'count', item)
         end
-        return (tonumber(count) or 0) > 0
+        return tonumber(count) or 0
     end
 
     if Framework.name == 'qb' or Framework.name == 'qbx' then
         local player = Framework.core and Framework.core.Functions.GetPlayer(source)
         local data = player and player.Functions.GetItemByName(item)
-        return data and ((data.amount or data.count or 0) > 0)
+        return data and tonumber(data.amount or data.count or 0) or 0
     end
 
     if Framework.name == 'esx' then
         local player = Framework.core.GetPlayerFromId(source)
         local data = player and player.getInventoryItem(item)
-        return data and ((data.count or 0) > 0)
+        return data and tonumber(data.count or data.amount or 0) or 0
     end
 
-    return true
+    return 0
+end
+
+function Framework.hasItem(source, item)
+    if not Framework.hasInventory() then
+        return true
+    end
+    return Framework.getItemCount(source, item) > 0
+end
+
+function Framework.removeItem(source, item, amount)
+    amount = math.floor(tonumber(amount) or 0)
+    if amount <= 0 then
+        return false
+    end
+    if Framework.getItemCount(source, item) < amount then
+        return false
+    end
+
+    if GetResourceState('ox_inventory') == 'started' then
+        local before = Framework.getItemCount(source, item)
+        if before < amount then
+            return false
+        end
+        exports.ox_inventory:RemoveItem(source, item, amount)
+        return Framework.getItemCount(source, item) <= before - amount
+    end
+
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        if not player then
+            return false
+        end
+        player.Functions.RemoveItem(item, amount)
+        return true
+    end
+
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        if not player then
+            return false
+        end
+        player.removeInventoryItem(item, amount)
+        return true
+    end
+
+    return false
+end
+
+function Framework.addItem(source, item, amount)
+    amount = math.floor(tonumber(amount) or 0)
+    if amount <= 0 then
+        return false
+    end
+
+    if GetResourceState('ox_inventory') == 'started' then
+        local added = exports.ox_inventory:AddItem(source, item, amount)
+        return added == true or type(added) == 'table'
+    end
+
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        if not player then
+            return false
+        end
+        return player.Functions.AddItem(item, amount) ~= false
+    end
+
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        if not player then
+            return false
+        end
+        player.addInventoryItem(item, amount)
+        return true
+    end
+
+    return false
+end
+
+local function resolveAccount(name)
+    if Framework.name == 'esx' and (name == 'cash' or name == nil) then
+        return 'money'
+    end
+    return name or accountName()
+end
+
+function Framework.getAccountMoney(source, name)
+    name = resolveAccount(name)
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        if not player then
+            return 0
+        end
+        return player.Functions.GetMoney(name) or 0
+    end
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        if not player then
+            return 0
+        end
+        local account = player.getAccount(name)
+        return account and account.money or 0
+    end
+    return Framework.getBalance(source)
+end
+
+function Framework.removeAccountMoney(source, name, amount)
+    amount = math.floor(tonumber(amount) or 0)
+    if amount <= 0 then
+        return false
+    end
+    name = resolveAccount(name)
+    if Framework.getAccountMoney(source, name) < amount then
+        return false
+    end
+
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        if not player then
+            return false
+        end
+        player.Functions.RemoveMoney(name, amount, 'gambling-tablet-memecoin')
+        return true
+    end
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        if not player then
+            return false
+        end
+        player.removeAccountMoney(name, amount)
+        return true
+    end
+    return Framework.removeMoney(source, amount)
+end
+
+function Framework.addAccountMoney(source, name, amount)
+    amount = math.floor(tonumber(amount) or 0)
+    if amount <= 0 then
+        return
+    end
+    name = resolveAccount(name)
+    if Framework.name == 'qb' or Framework.name == 'qbx' then
+        local player = Framework.core and Framework.core.Functions.GetPlayer(source)
+        if player then
+            player.Functions.AddMoney(name, amount, 'gambling-tablet-memecoin')
+        end
+        return
+    end
+    if Framework.name == 'esx' then
+        local player = Framework.core.GetPlayerFromId(source)
+        if player then
+            player.addAccountMoney(name, amount)
+        end
+        return
+    end
+    Framework.addMoney(source, amount)
 end

@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envy Roleplay</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23030806'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='18' font-family='Segoe UI,sans-serif' font-weight='800' fill='%2332a070'%3EE%3C/text%3E%3C/svg%3E">
+    <title>City of Dreams</title>
+    <style>html,body{background:transparent!important;background-color:transparent!important;}</style>
+    <link rel="icon" href="img/logo-mark.png">
     <link rel="stylesheet" href="css/tablet.css">
 </head>
 <body>
     <div id="overlay" class="overlay hidden">
-        <div class="tablet" role="application" aria-label="Envy Roleplay gambling tablet">
+        <div class="tablet" role="application" aria-label="City of Dreams gambling tablet">
+            <div class="orb orb-a"></div>
+            <div class="orb orb-b"></div>
+            <div class="orb orb-c"></div>
             <header class="chrome">
                 <div class="brand">
-                    <img class="logo" src="img/envy-mark.png" alt="Envy Roleplay">
+                    <img class="logo" src="img/logo.png" alt="City of Dreams" width="72" height="72" decoding="async" draggable="false">
                     <div class="wordmark">
-                        <strong>ENVY</strong>
-                        <em>ROLEPLAY</em>
-                        <div class="swatches" aria-hidden="true" title="Envy neon, emerald, mint, chrome">
-                            <i class="neon"></i>
-                            <i class="emerald"></i>
-                            <i class="mint"></i>
+                        <strong>CITY OF</strong>
+                        <em>DREAMS</em>
+                        <div class="swatches" aria-hidden="true" title="City of Dreams">
+                            <i class="magenta"></i>
+                            <i class="cyan"></i>
+                            <i class="violet"></i>
                             <i class="chrome-dot"></i>
                         </div>
                     </div>
@@ -28,18 +32,18 @@
                 <div class="profile">
                     <div class="profile-copy">
                         <strong id="playerName">Player</strong>
-                        <span id="playerRole">Player</span>
+                        <span id="playerRole">House guest</span>
                     </div>
-                    <div class="avatar" id="playerAvatar" aria-hidden="true">E</div>
+                    <div class="avatar" id="playerAvatar" aria-hidden="true">CD</div>
                 </div>
             </header>
 
             <section class="stats" aria-label="Session stats">
                 <article class="stat">
-                    <span>Current Balance:</span>
+                    <span>Chip Balance:</span>
                     <div class="stat-row">
                         <strong id="statBalance">$0</strong>
-                        <em id="statBalanceChip" class="chip">LIVE</em>
+                        <em id="statBalanceChip" class="chip">CHIPS</em>
                     </div>
                 </article>
                 <article class="stat">
@@ -61,7 +65,10 @@
             <main id="view" class="view"></main>
 
             <footer class="dock">
-                <p id="statusLine">Envy Roleplay</p>
+                <span class="footer-brand">
+                    <img src="img/logo-mark.png" alt="" width="28" height="28" decoding="async" draggable="false">
+                    <span id="statusLine">CITY OF DREAMS</span>
+                </span>
                 <button id="closeBtn" class="key" type="button">RSHIFT (Close)</button>
             </footer>
         </div>

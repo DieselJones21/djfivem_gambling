@@ -1,5 +1,5 @@
 import { defaultConfig, dicePayout, minesMultiplier, wheelRtp } from '../html/js/defaults.js';
-import { play, resetSession } from '../html/js/engine.js';
+import { play, convert, resetSession } from '../html/js/engine.js';
 import { emptyLeaderboard, recordLeaderboard, seedPreviewBoard } from '../html/js/leaderboard.js';
 
 function assert(condition, message) {
@@ -8,13 +8,14 @@ function assert(condition, message) {
 
 const state = () => ({
     balance: 10000,
+    memecoin: 2500,
     stats: { wagered: 0, won: 0, lost: 0, lastWin: 0, history: [] },
     config: structuredClone(defaultConfig)
 });
 
 const fifty = dicePayout(defaultConfig, 50);
 assert(fifty.chance === 50, 'dice chance clamps to 50');
-assert(fifty.payout === 1.84, `dice 50% payout should be 1.84, got ${fifty.payout}`);
+assert(fifty.payout === 1.76, `dice 50% payout should be 1.76, got ${fifty.payout}`);
 
 const mine = minesMultiplier(defaultConfig, 5, 3);
 assert(mine > 1, 'mines multiplier grows after gems');
@@ -120,13 +121,34 @@ app = state();
 const after = play('mines_start', { bet: 100, mines: 5 }, app);
 assert(after.ok && after.board.tiles.length === 25, after.error);
 
-const tooBig = play('slots', { bet: 100001 }, state());
-assert(!tooBig.ok, 'rejects bets over 100k');
+const tooBig = play('slots', { bet: 50001 }, state());
+assert(!tooBig.ok, 'rejects bets over 50k');
 
 const rtp = wheelRtp(defaultConfig.wheel.segments);
 assert(rtp < 1, `wheel RTP must be house-sided, got ${rtp}`);
+assert(rtp < 0.85, `wheel RTP tightened below 0.85, got ${rtp}`);
 assert(defaultConfig.wheel.segments.every((segment) => Number.isFinite(segment.weight)), 'preview engine keeps wheel weights');
 assert(defaultConfig.coinflip.winChance < 50, 'coin flip must be worse than even');
-assert(defaultConfig.bets.max === 100000, 'max bet is 100k');
+assert(defaultConfig.coinflip.winChance === 40, 'coin flip win chance is 40%');
+assert(defaultConfig.bets.max === 50000, 'max bet is 50k');
+assert(defaultConfig.bets.min === 5, 'min bet is 5');
+assert(defaultConfig.blackjack.blackjackPayout === 1, 'blackjack pays even money');
+assert(defaultConfig.crash.houseEdge === 0.16, 'crash house edge tightened');
+assert(defaultConfig.memecoin.enabled, 'memecoin cashier is on');
+
+app = state();
+const bought = convert({ direction: 'buy', amount: 100 }, app);
+assert(bought.ok, bought.error);
+assert(app.memecoin === 2400, 'buying chips spends memecoin');
+assert(app.balance === 10100, 'buying chips credits the chip wallet');
+
+const broke = convert({ direction: 'buy', amount: 99999 }, state());
+assert(!broke.ok, 'rejects converting more memecoin than the player holds');
+
+app = state();
+const cashedOut = convert({ direction: 'cashout', amount: 500 }, app);
+assert(cashedOut.ok, cashedOut.error);
+assert(app.balance === 9500, 'cashout spends chips');
+assert(app.memecoin === 3000, 'cashout returns memecoin');
 
 console.log('odds and engine checks passed');

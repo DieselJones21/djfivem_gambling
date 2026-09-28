@@ -82,6 +82,27 @@ RegisterNUICallback('play', function(body, cb)
     cb(request(action, body.data or {}))
 end)
 
+RegisterNUICallback('convert', function(body, cb)
+    if not open then
+        cb({ ok = false, error = 'Tablet is closed' })
+        return
+    end
+    nextRequest = nextRequest + 1
+    local id = nextRequest
+    local p = promise.new()
+    pending[id] = function(result)
+        p:resolve(result)
+    end
+    TriggerServerEvent('djfivem_gambling:server:convert', body or {}, id)
+    SetTimeout(8000, function()
+        if pending[id] then
+            pending[id]({ ok = false, error = 'Request timed out' })
+            pending[id] = nil
+        end
+    end)
+    cb(Citizen.Await(p))
+end)
+
 RegisterCommand(Config.OpenCommand or 'gambling', function()
     if open then
         closeTablet()
@@ -107,7 +128,7 @@ end)
 
 RegisterNetEvent('djfivem_gambling:client:notify', function(message)
     BeginTextCommandThefeedPost('STRING')
-    AddTextComponentSubstringPlayerName(message or 'Envy Roleplay')
+    AddTextComponentSubstringPlayerName(message or 'City of Dreams')
     EndTextCommandThefeedPostTicker(false, true)
 end)
 

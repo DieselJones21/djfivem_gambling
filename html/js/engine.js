@@ -46,6 +46,7 @@ function payload(state, extra = {}) {
     return {
         ok: true,
         balance: state.balance,
+        memecoin: state.memecoin || 0,
         stats: { ...state.stats, history: state.stats.history.slice() },
         leaderboard: state.leaderboard,
         ...extra
@@ -54,11 +55,44 @@ function payload(state, extra = {}) {
 
 function settle(state, game, bet, payout, extra = {}) {
     payout = Math.floor(Number(payout) || 0);
-    const cap = state.config.maxPayout || 250000;
+    const cap = state.config.maxPayout || 125000;
     if (payout > cap) payout = cap;
     if (payout > 0) state.balance += payout;
     history(state, game, bet, payout);
     return payload(state, { game, bet, payout, profit: payout - bet, ...extra });
+}
+
+function convertMemecoin(state, data = {}) {
+    const cfg = state.config.memecoin || {};
+    if (cfg.enabled === false) return fail('Cashier is closed');
+    const rate = Math.max(1, Math.floor(Number(cfg.rate) || 1));
+    const min = Math.max(1, Math.floor(Number(cfg.minConvert) || 1));
+    const max = Math.max(min, Math.floor(Number(cfg.maxConvert) || 50000));
+    const direction = data.direction;
+    let amount = Math.floor(Number(data.amount) || 0);
+
+    if (direction === 'buy') {
+        if (amount < min) return fail('Below the cashier minimum');
+        if (amount > max) return fail('Above the cashier maximum');
+        if ((state.memecoin || 0) < amount) return fail('Not enough memecoin');
+        state.memecoin -= amount;
+        state.balance += amount * rate;
+        return payload(state, { converted: true, direction, amount, credited: amount * rate, memecoin: state.memecoin });
+    }
+
+    if (direction === 'cashout') {
+        if (cfg.allowCashout === false) return fail('Cashier cashout is closed');
+        if (amount < rate || amount % rate !== 0) return fail(`Cash out in multiples of ${rate} chips`);
+        const coins = Math.floor(amount / rate);
+        if (coins < min) return fail('Below the cashier minimum');
+        if (coins > max) return fail('Above the cashier maximum');
+        if (state.balance < amount) return fail('Not enough chips');
+        state.balance -= amount;
+        state.memecoin = (state.memecoin || 0) + coins;
+        return payload(state, { converted: true, direction, amount: coins, credited: amount, memecoin: state.memecoin });
+    }
+
+    return fail('Choose buy or cash out');
 }
 
 function shuffle(list) {
@@ -555,6 +589,10 @@ export function play(action, data, state) {
     const handler = actions[action];
     if (!handler) return fail('Unknown action');
     return handler(state, data || {});
+}
+
+export function convert(data, state) {
+    return convertMemecoin(state, data || {});
 }
 
 export function resetSession() {
