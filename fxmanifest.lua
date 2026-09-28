@@ -4,8 +4,8 @@ lua54 'yes'
 
 name 'djfivem_gambling'
 author 'DieselJones'
-description 'Envy Roleplay gambling tablet with configurable odds and payouts'
-version '1.1.0'
+description 'City of Dreams gambling tablet with memecoin cashier, configurable odds, and payouts'
+version '1.2.0'
 
 ui_page 'html/index.html'
 
@@ -20,6 +20,7 @@ client_scripts {
 
 server_scripts {
     'server/framework.lua',
+    'server/chips.lua',
     'server/leaderboard.lua',
     'server/games.lua',
     'server/main.lua'
@@ -28,7 +29,8 @@ server_scripts {
 files {
     'html/index.html',
     'html/css/tablet.css',
-    'html/img/envy-mark.png',
+    'html/img/logo.png',
+    'html/img/logo-mark.png',
     'html/js/*.js',
     'html/js/games/*.js'
 }

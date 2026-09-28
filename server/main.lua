@@ -75,11 +75,34 @@ local function pushHistory(source, game, bet, payout)
     end
 end
 
+local function walletBalance(source)
+    if Chips.enabled() then
+        return Chips.get(source)
+    end
+    return Framework.getBalance(source)
+end
+
+local function walletRemove(source, amount)
+    if Chips.enabled() then
+        return Chips.remove(source, amount)
+    end
+    return Framework.removeMoney(source, amount)
+end
+
+local function walletAdd(source, amount)
+    if Chips.enabled() then
+        Chips.add(source, amount)
+        return
+    end
+    Framework.addMoney(source, amount)
+end
+
 local function payload(source, extra)
     local data = playerStats(source)
     local body = {
         ok = true,
-        balance = Framework.getBalance(source),
+        balance = walletBalance(source),
+        memecoin = Chips.enabled() and Chips.getMemecoin(source) or 0,
         stats = {
             wagered = data.wagered,
             won = data.won,
@@ -105,7 +128,7 @@ local function takeBet(source, amount)
     if not bet then
         return nil, err
     end
-    if not Framework.removeMoney(source, bet) then
+    if not walletRemove(source, bet) then
         return nil, 'Not enough chips'
     end
     return bet
@@ -115,7 +138,7 @@ local function settle(source, game, bet, payout, extra)
     payout = Odds.capPayout(payout)
     bet = math.floor(tonumber(bet) or 0)
     if payout > 0 then
-        Framework.addMoney(source, payout)
+        walletAdd(source, payout)
     end
     pushHistory(source, game, bet, payout)
     extra = extra or {}
@@ -163,7 +186,7 @@ local function canPlay(source, action)
         return nil, 'Tablet is closed'
     end
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        return nil, 'You need an Envy tablet.'
+        return nil, 'You need a City of Dreams tablet.'
     end
     if not RATE_FREE[action] then
         local now = GetGameTimer()
@@ -190,12 +213,19 @@ end)
 
 local function openFor(source)
     if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
-        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need an Envy tablet.')
+        TriggerClientEvent('djfivem_gambling:client:notify', source, 'You need a City of Dreams tablet.')
         return
     end
 
     opened[source] = true
     lastPlay[source] = 0
+
+    if Chips.enabled() and not Framework.hasInventory() and not Chips.useAccount() then
+        local starter = math.floor(tonumber(Config.StartingMemecoin) or 0)
+        if starter > 0 and Chips.get(source) == 0 and Chips.getMemecoin(source) == 0 then
+            Chips.addMemecoin(source, starter)
+        end
+    end
 
     TriggerClientEvent('djfivem_gambling:client:open', source, {
         player = {
@@ -203,7 +233,8 @@ local function openFor(source)
             role = 'Player'
         },
         config = Odds.publicConfig(),
-        balance = Framework.getBalance(source),
+        balance = walletBalance(source),
+        memecoin = Chips.enabled() and Chips.getMemecoin(source) or 0,
         stats = playerStats(source),
         leaderboard = Leaderboard.snapshot(source)
     })
@@ -257,7 +288,7 @@ function actions.blackjack_act(source, data)
             return fail('Double is not available')
         end
         extraBet = session.bet
-        if not Framework.removeMoney(source, extraBet) then
+        if not walletRemove(source, extraBet) then
             return fail('Not enough chips for that action')
         end
     elseif data.action == 'split' then
@@ -267,7 +298,7 @@ function actions.blackjack_act(source, data)
             return fail('Split is not available')
         end
         extraBet = session.bet
-        if not Framework.removeMoney(source, extraBet) then
+        if not walletRemove(source, extraBet) then
             return fail('Not enough chips for that action')
         end
     end
@@ -275,7 +306,7 @@ function actions.blackjack_act(source, data)
     local updated, err = Games.blackjackAct(session, data.action)
     if err then
         if extraBet > 0 then
-            Framework.addMoney(source, extraBet)
+            walletAdd(source, extraBet)
         end
         return fail(err)
     end
@@ -306,7 +337,7 @@ function actions.roulette(source, data)
     end
     local result, spinErr = Games.rouletteSpin(bet, data.placement or {})
     if not result then
-        Framework.addMoney(source, bet)
+        walletAdd(source, bet)
         return fail(spinErr)
     end
     return settle(source, 'roulette', bet, result.payout, { result = result })
@@ -445,7 +476,7 @@ function actions.baccarat(source, data)
     end
     local result, dealErr = Games.baccaratDeal(bet, data.side)
     if not result then
-        Framework.addMoney(source, bet)
+        walletAdd(source, bet)
         return fail(dealErr)
     end
     return settle(source, 'baccarat', bet, result.payout, { result = result })
@@ -513,7 +544,7 @@ function actions.coinflip(source, data)
     end
     local result, flipErr = Games.coinflip(bet, data.side)
     if not result then
-        Framework.addMoney(source, bet)
+        walletAdd(source, bet)
         return fail(flipErr)
     end
     return settle(source, 'coinflip', bet, result.payout, { result = result })
@@ -545,6 +576,48 @@ RegisterNetEvent('djfivem_gambling:server:play', function(action, data, requestI
         return
     end
     TriggerClientEvent('djfivem_gambling:client:result', source, result, requestId)
+end)
+
+RegisterNetEvent('djfivem_gambling:server:convert', function(data, requestId)
+    local source = source
+    if type(data) ~= 'table' then
+        data = {}
+    end
+    if not opened[source] then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Tablet is closed'), requestId)
+        return
+    end
+    if not Chips.enabled() then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Cashier is closed'), requestId)
+        return
+    end
+    if Config.UseItem and Config.RequireItem and not Framework.hasItem(source, Config.ItemName) then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('You need a City of Dreams tablet.'), requestId)
+        return
+    end
+
+    local direction = data.direction
+    local result, err
+    if direction == 'buy' then
+        result, err = Chips.buy(source, data.amount)
+    elseif direction == 'cashout' then
+        result, err = Chips.cashout(source, data.amount)
+    else
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail('Choose buy or cash out'), requestId)
+        return
+    end
+
+    if not result then
+        TriggerClientEvent('djfivem_gambling:client:result', source, fail(err or 'Cashier declined'), requestId)
+        return
+    end
+
+    TriggerClientEvent('djfivem_gambling:client:result', source, payload(source, {
+        converted = true,
+        direction = direction,
+        amount = result.converted,
+        credited = result.credited
+    }), requestId)
 end)
 
 AddEventHandler('playerDropped', function()

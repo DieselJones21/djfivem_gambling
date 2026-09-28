@@ -4,10 +4,10 @@ let last = null;
 let angle = 0;
 
 const TONES = {
-    red: '#3dff9a',
-    white: '#57b59e',
-    mute: '#1a6b4a',
-    dead: '#07140f'
+    red: '#ff2bd6',
+    white: '#00e5f0',
+    mute: '#9b4dff',
+    dead: '#12081c'
 };
 
 export function render(root, ctx) {
